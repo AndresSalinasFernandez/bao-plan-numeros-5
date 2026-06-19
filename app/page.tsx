@@ -3,6 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 type Stage = "ask" | "time" | "hunt" | "fortune" | "done";
+type MemoryPhase = "preview" | "playing" | "failed" | "won";
+type MemoryCardKind = "bao" | "decoy";
+type MemoryCard = {
+  id: string;
+  kind: MemoryCardKind;
+  label: string;
+  art: string;
+};
 
 const times = ["13:30", "14:00", "14:30", "20:30", "21:00"];
 const fortunes = [
@@ -12,36 +20,54 @@ const fortunes = [
   "Una cita improvisada cuenta doble.",
 ];
 
-const baoTiles = [
-  "bao",
-  "soy",
-  "bao",
-  "tea",
-  "bao",
-  "rice",
-  "bao",
-  "chopsticks",
-  "bao",
-  "chili",
-  "steam",
-  "bao",
+const memoryDeck: MemoryCard[] = [
+  { id: "bao-red", kind: "bao", label: "Bao rojo", art: "bao-red" },
+  { id: "tea", kind: "decoy", label: "Te verde", art: "tea" },
+  { id: "bao-gold", kind: "bao", label: "Bao dorado", art: "bao-gold" },
+  { id: "noodles", kind: "decoy", label: "Fideos", art: "noodles" },
+  { id: "chili", kind: "decoy", label: "Salsa", art: "chili" },
+  { id: "bao-jade", kind: "bao", label: "Bao jade", art: "bao-jade" },
+  { id: "chopsticks", kind: "decoy", label: "Palillos", art: "chopsticks" },
+  { id: "bao-classic", kind: "bao", label: "Bao clasico", art: "bao-classic" },
 ];
+
+function shuffleDeck() {
+  const shuffled = [...memoryDeck];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("ask");
   const [noPosition, setNoPosition] = useState({ left: 67, top: 58 });
   const [noAttempts, setNoAttempts] = useState(0);
   const [selectedTime, setSelectedTime] = useState(times[1]);
-  const [foundTiles, setFoundTiles] = useState<number[]>([]);
+  const [memoryCards, setMemoryCards] = useState<MemoryCard[]>(memoryDeck);
+  const [memoryPhase, setMemoryPhase] = useState<MemoryPhase>("preview");
+  const [memoryRound, setMemoryRound] = useState(1);
+  const [revealedMemoryIds, setRevealedMemoryIds] = useState<string[]>([]);
   const [fortuneIndex, setFortuneIndex] = useState(0);
   const [shareLabel, setShareLabel] = useState("Compartir plan");
 
-  const foundBaos = foundTiles.length;
+  const foundBaos = revealedMemoryIds.filter((id) =>
+    memoryCards.some((card) => card.id === id && card.kind === "bao"),
+  ).length;
   const currentFortune = fortunes[fortuneIndex];
+  const memoryStatus = {
+    preview: "Memoriza las tarjetas: en 3 segundos se voltean.",
+    playing: "Ahora encuentra los 4 baos. Si fallas, vuelta a empezar.",
+    failed: "Ups: eso no era un bao. Reiniciando la ronda...",
+    won: "Perfecto: 4 baos localizados sin fallar.",
+  }[memoryPhase];
 
   const planText = useMemo(
     () =>
-      `Plan aceptado: numeros 5 contigo a las ${selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos}/5 baos encontrados y fortuna: "${currentFortune}"`,
+      `Plan aceptado: numeros 5 contigo a las ${selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
     [currentFortune, foundBaos, selectedTime],
   );
 
@@ -57,16 +83,33 @@ export default function Home() {
     setStage("time");
   }
 
-  function toggleBao(index: number) {
-    if (baoTiles[index] !== "bao" || foundTiles.includes(index)) {
+  function startMemoryRound() {
+    setMemoryCards(shuffleDeck());
+    setRevealedMemoryIds([]);
+    setMemoryPhase("preview");
+    setMemoryRound((round) => round + 1);
+  }
+
+  function handleMemoryCard(card: MemoryCard) {
+    if (memoryPhase !== "playing" || revealedMemoryIds.includes(card.id)) {
       return;
     }
 
-    setFoundTiles((current) => {
-      const next = [...current, index];
-      if (next.length >= 5) {
-        window.setTimeout(() => setStage("fortune"), 450);
+    if (card.kind !== "bao") {
+      setRevealedMemoryIds((current) => [...current, card.id]);
+      setMemoryPhase("failed");
+      window.setTimeout(startMemoryRound, 1150);
+      return;
+    }
+
+    setRevealedMemoryIds((current) => {
+      const next = [...current, card.id];
+
+      if (next.length >= 4) {
+        setMemoryPhase("won");
+        window.setTimeout(() => setStage("fortune"), 650);
       }
+
       return next;
     });
   }
@@ -106,6 +149,18 @@ export default function Home() {
 
     return () => window.clearInterval(timer);
   }, [stage]);
+
+  useEffect(() => {
+    if (stage !== "hunt" || memoryPhase !== "preview") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setMemoryPhase("playing");
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [memoryPhase, memoryRound, stage]);
 
   useEffect(() => {
     if (stage === "ask") {
@@ -169,7 +224,7 @@ export default function Home() {
 
           {stage !== "ask" && (
             <div className="progress" aria-label="Progreso del plan">
-              {["Si", "Hora", "5 baos", "Fortuna"].map((item, index) => {
+              {["Si", "Hora", "4 baos", "Fortuna"].map((item, index) => {
                 const isActive =
                   (stage === "time" && index <= 1) ||
                   (stage === "hunt" && index <= 2) ||
@@ -211,7 +266,14 @@ export default function Home() {
             permitido: el necesario para tener hambre.
           </div>
 
-          <button className="primary-action" type="button" onClick={() => setStage("hunt")}>
+          <button
+            className="primary-action"
+            type="button"
+            onClick={() => {
+              startMemoryRound();
+              setStage("hunt");
+            }}
+          >
             Continuar al entrenamiento bao
           </button>
         </section>
@@ -221,38 +283,57 @@ export default function Home() {
         <section className="step-panel" id="step-hunt">
           <div className="step-heading">
             <p className="eyebrow">Mini juego</p>
-            <h2>Encuentra 5 baos antes de salir</h2>
+            <h2>Encuentra los 4 baos sin fallar</h2>
           </div>
 
-          <div className="bao-counter">
-            <span>{foundBaos}</span>
-            <span>/ 5 baos localizados</span>
+          <div className="memory-head">
+            <div className="bao-counter" aria-live="polite">
+              <span>{foundBaos}</span>
+              <span>/ 4 baos</span>
+            </div>
+            <p>{memoryStatus}</p>
           </div>
 
-          <div className="bao-grid" aria-label="Juego de encontrar baos">
-            {baoTiles.map((tile, index) => {
-              const found = foundTiles.includes(index);
-              const isBao = tile === "bao";
+          <div
+            className={[
+              "memory-board",
+              memoryPhase === "preview" ? "is-previewing" : "",
+            ].join(" ")}
+            aria-label="Juego de memoria de baos"
+          >
+            {memoryCards.map((card) => {
+              const isVisible = memoryPhase === "preview" || revealedMemoryIds.includes(card.id);
+              const isWrong = memoryPhase === "failed" && revealedMemoryIds.includes(card.id);
 
               return (
                 <button
-                  aria-label={isBao ? "Bao" : "Distraccion"}
+                  aria-label={isVisible ? card.label : "Tarjeta oculta"}
                   className={[
-                    "bao-tile",
-                    isBao ? "is-bao" : "is-decoy",
-                    found ? "is-found" : "",
+                    "memory-card",
+                    isVisible ? "is-visible" : "",
+                    card.kind === "bao" ? "is-bao-card" : "is-decoy-card",
+                    isWrong ? "is-wrong" : "",
                   ].join(" ")}
-                  key={`${tile}-${index}`}
+                  disabled={memoryPhase !== "playing" || revealedMemoryIds.includes(card.id)}
+                  key={card.id}
                   type="button"
-                  onClick={() => toggleBao(index)}
+                  onClick={() => handleMemoryCard(card)}
                 >
-                  <span aria-hidden="true">
-                    {isBao ? "bao" : tile === "soy" ? "soja" : tile === "tea" ? "te" : tile}
+                  <span className="memory-card__inner" aria-hidden="true">
+                    <span className="memory-card__face memory-card__front">
+                      <span className={`food-art ${card.art}`} />
+                      <span>{card.label}</span>
+                    </span>
+                    <span className="memory-card__face memory-card__back">?</span>
                   </span>
                 </button>
               );
             })}
           </div>
+
+          <button className="secondary-action memory-reset" type="button" onClick={startMemoryRound}>
+            Barajar y empezar otra vez
+          </button>
         </section>
       )}
 

@@ -305,71 +305,289 @@ h2 {
   line-height: 1;
 }
 
-.bao-grid {
+.memory-head {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.memory-head .bao-counter {
+  margin-bottom: 0;
+}
+
+.memory-head p {
+  margin: 0;
+  color: #6c4a36;
+  line-height: 1.45;
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.bao-tile {
-  aspect-ratio: 1;
-  border: 1px solid var(--line);
+.memory-card {
+  aspect-ratio: 0.9;
+  min-height: 132px;
+  border: 0;
   border-radius: 8px;
-  background: #fffaf0;
-  color: #6f4b35;
+  background: transparent;
   cursor: pointer;
-  font-size: clamp(0.76rem, 3vw, 1rem);
-  font-weight: 950;
-  text-transform: uppercase;
-  transition:
-    background-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+  perspective: 900px;
+  touch-action: manipulation;
 }
 
-.bao-tile span {
-  display: grid;
-  place-items: center;
+.memory-card:disabled {
+  cursor: default;
+}
+
+.memory-card__inner {
+  position: relative;
+  display: block;
   width: 100%;
   height: 100%;
+  transform: rotateY(180deg);
+  transform-style: preserve-3d;
+  transition:
+    transform 420ms ease,
+    filter 160ms ease;
 }
 
-.bao-tile.is-bao {
+.memory-card.is-visible .memory-card__inner {
+  transform: rotateY(0deg);
+}
+
+.memory-card:not(:disabled):active .memory-card__inner {
+  filter: brightness(0.96);
+}
+
+.memory-card__face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  backface-visibility: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 22px rgba(92, 42, 15, 0.12);
+}
+
+.memory-card__front {
+  background: #fffaf0;
+  color: #5d3b29;
+  padding: 14px;
+  font-size: clamp(0.82rem, 3.6vw, 1rem);
+  font-weight: 950;
+  text-align: center;
+}
+
+.memory-card__back {
+  grid-template-rows: 1fr;
   background:
-    radial-gradient(circle at 50% 42%, #fff 0 24%, #f4dfba 25% 39%, transparent 40%),
-    #fff8e7;
-  color: transparent;
+    radial-gradient(circle at 28% 25%, rgba(255, 255, 255, 0.45) 0 9%, transparent 10%),
+    linear-gradient(135deg, #d9342b, #a91f1b);
+  color: #fff5d6;
+  font-size: clamp(2.6rem, 14vw, 4.4rem);
+  font-weight: 950;
+  transform: rotateY(180deg);
 }
 
-.bao-tile.is-bao span::before {
-  content: "";
-  width: 48%;
-  aspect-ratio: 1.15;
+.memory-card.is-bao-card.is-visible .memory-card__front {
+  border-color: rgba(31, 122, 90, 0.42);
+  background: #f4fff0;
+}
+
+.memory-card.is-wrong .memory-card__front {
+  border-color: rgba(217, 52, 43, 0.65);
+  background: #ffe7dd;
+  color: var(--red-dark);
+  animation: card-wrong 360ms ease;
+}
+
+.food-art {
+  position: relative;
+  width: min(74%, 104px);
+  aspect-ratio: 1;
   display: block;
-  border: 2px solid rgba(84, 45, 25, 0.34);
+}
+
+.food-art::before,
+.food-art::after {
+  content: "";
+  position: absolute;
+}
+
+.food-art.bao-red,
+.food-art.bao-gold,
+.food-art.bao-jade,
+.food-art.bao-classic {
+  border: 2px solid rgba(84, 45, 25, 0.22);
   border-radius: 50% 50% 42% 42%;
   background:
     radial-gradient(circle at 34% 48%, var(--ink) 0 5%, transparent 6%),
     radial-gradient(circle at 64% 48%, var(--ink) 0 5%, transparent 6%),
-    radial-gradient(ellipse at 50% 68%, rgba(217, 52, 43, 0.52) 0 8%, transparent 9%),
+    radial-gradient(ellipse at 50% 68%, rgba(217, 52, 43, 0.45) 0 8%, transparent 9%),
     #fffdf7;
-  box-shadow: inset 0 -10px 0 rgba(238, 203, 151, 0.55);
+  box-shadow: inset 0 -14px 0 rgba(238, 203, 151, 0.54);
 }
 
-.bao-tile.is-decoy {
-  background: #edf6e8;
-  color: #476043;
+.food-art.bao-red::before,
+.food-art.bao-gold::before,
+.food-art.bao-jade::before,
+.food-art.bao-classic::before {
+  top: 10%;
+  left: 22%;
+  width: 56%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(238, 203, 151, 0.72);
 }
 
-.bao-tile.is-found {
-  border-color: rgba(217, 52, 43, 0.52);
+.food-art.bao-red::after {
+  right: -8%;
+  bottom: 8%;
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
   background: var(--red);
-  color: white;
-  transform: rotate(-4deg) scale(0.94);
 }
 
-.bao-tile.is-found span::before {
-  filter: brightness(1.8);
+.food-art.bao-gold::after {
+  right: -8%;
+  bottom: 8%;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.food-art.bao-jade::after {
+  right: -8%;
+  bottom: 8%;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.food-art.bao-classic::after {
+  right: -8%;
+  bottom: 8%;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: #f2d9a6;
+}
+
+.food-art.tea {
+  border-radius: 0 0 42% 42%;
+  background:
+    radial-gradient(ellipse at 50% 24%, #dff4df 0 32%, transparent 34%),
+    linear-gradient(#fffdf7 0 58%, #f5dfb7 59%);
+  box-shadow: inset 0 -10px 0 rgba(31, 122, 90, 0.14);
+}
+
+.food-art.tea::before {
+  right: -20%;
+  top: 34%;
+  width: 34%;
+  height: 34%;
+  border: 8px solid #f5dfb7;
+  border-left: 0;
+  border-radius: 0 50% 50% 0;
+}
+
+.food-art.tea::after {
+  top: -16%;
+  left: 28%;
+  width: 44%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(31, 122, 90, 0.18);
+}
+
+.food-art.noodles {
+  border-radius: 50% 50% 40% 40%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 9px, rgba(169, 31, 27, 0.28) 10px 12px),
+    linear-gradient(#f6cf69 0 45%, #fffdf7 46% 100%);
+  box-shadow: inset 0 -16px 0 rgba(217, 52, 43, 0.22);
+}
+
+.food-art.noodles::before {
+  bottom: 10%;
+  left: 10%;
+  width: 80%;
+  height: 30%;
+  border-radius: 0 0 48% 48%;
+  background: #d9342b;
+}
+
+.food-art.noodles::after {
+  top: 18%;
+  left: 12%;
+  width: 76%;
+  height: 20%;
+  border-top: 5px solid rgba(84, 45, 25, 0.28);
+  border-radius: 50%;
+}
+
+.food-art.chili {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 42%, #ff7f4f 0 13%, transparent 14%),
+    radial-gradient(circle at 62% 56%, #f2b84b 0 10%, transparent 11%),
+    radial-gradient(circle at 50% 50%, var(--red) 0 48%, #fffdf7 49% 64%, transparent 65%);
+  box-shadow: inset 0 -8px 0 rgba(84, 45, 25, 0.14);
+}
+
+.food-art.chili::before {
+  top: -12%;
+  left: 12%;
+  width: 76%;
+  height: 32%;
+  border-radius: 50%;
+  background: rgba(84, 45, 25, 0.14);
+}
+
+.food-art.chili::after {
+  bottom: 2%;
+  left: 26%;
+  width: 48%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgba(84, 45, 25, 0.18);
+}
+
+.food-art.chopsticks {
+  background:
+    linear-gradient(74deg, transparent 0 41%, #8c4b2f 42% 47%, transparent 48%),
+    linear-gradient(106deg, transparent 0 47%, #b86b3d 48% 53%, transparent 54%),
+    radial-gradient(circle at 50% 72%, #fffdf7 0 26%, transparent 27%);
+}
+
+.food-art.chopsticks::before {
+  bottom: 5%;
+  left: 19%;
+  width: 62%;
+  height: 18%;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.food-art.chopsticks::after {
+  bottom: 16%;
+  left: 32%;
+  width: 36%;
+  height: 10%;
+  border-radius: 50%;
+  background: rgba(242, 184, 75, 0.82);
+}
+
+.memory-reset {
+  margin-top: 12px;
 }
 
 .fortune-panel {
@@ -430,6 +648,21 @@ h2 {
   line-height: 1.45;
 }
 
+@keyframes card-wrong {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  30% {
+    transform: translateX(-5px);
+  }
+
+  60% {
+    transform: translateX(5px);
+  }
+}
+
 @media (min-width: 720px) {
   .bao-shell {
     padding: 24px;
@@ -457,7 +690,7 @@ h2 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .bao-grid {
+  .memory-board {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 

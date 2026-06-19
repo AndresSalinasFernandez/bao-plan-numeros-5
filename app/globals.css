@@ -197,7 +197,7 @@ h2 {
 
 .progress {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 28px;
 }
@@ -307,6 +307,148 @@ h2 {
   border: 1px solid var(--line);
   background: #fffaf0;
   color: var(--ink);
+}
+
+.hunger-panel,
+.catch-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.hunger-meter {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+  padding: 18px;
+}
+
+.hunger-meter span {
+  color: #6c4a36;
+  font-weight: 900;
+}
+
+.hunger-meter strong {
+  color: var(--red);
+  font-size: clamp(2.6rem, 13vw, 5rem);
+  line-height: 0.92;
+}
+
+.hunger-meter input {
+  width: 100%;
+  accent-color: var(--red);
+}
+
+.hunger-verdict {
+  border-left: 5px solid var(--red);
+  border-radius: 8px;
+  background: #fff3cf;
+  padding: 16px;
+  color: #4c3324;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.catch-scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.catch-scoreboard div {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+  text-align: center;
+}
+
+.catch-scoreboard strong {
+  color: var(--red);
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: 0.85;
+}
+
+.catch-scoreboard span {
+  color: #6c4a36;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.catch-message {
+  margin: 0;
+  color: #6c4a36;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.catch-arena {
+  position: relative;
+  min-height: 370px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.88), rgba(223, 244, 223, 0.72)),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(84, 45, 25, 0.06) 47px 48px);
+}
+
+.catch-arena::after {
+  content: "5";
+  position: absolute;
+  right: 14px;
+  bottom: -16px;
+  color: rgba(217, 52, 43, 0.12);
+  font-size: 10rem;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.falling-item {
+  position: absolute;
+  top: -72px;
+  z-index: 2;
+  min-height: 54px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 950;
+  touch-action: manipulation;
+  transform: translateX(-50%);
+}
+
+.catch-arena.is-live .falling-item {
+  animation-name: catch-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.falling-item.is-target {
+  z-index: 4;
+  width: 62px;
+  background: var(--red);
+  color: white;
+  box-shadow: 0 8px 0 var(--red-dark), 0 18px 26px rgba(130, 29, 20, 0.24);
+  font-size: 2.35rem;
+}
+
+.falling-item.is-trap {
+  z-index: 3;
+  width: 86px;
+  background: #2c211d;
+  color: white;
+  box-shadow: 0 8px 18px rgba(18, 12, 10, 0.22);
+  font-size: 0.74rem;
+}
+
+.falling-item.is-caught {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
 }
 
 .bao-counter {
@@ -926,6 +1068,18 @@ h2 {
   }
 }
 
+@keyframes catch-fall {
+  0% {
+    top: -72px;
+    transform: translateX(-50%) rotate(-9deg);
+  }
+
+  100% {
+    top: calc(100% + 72px);
+    transform: translateX(-50%) rotate(15deg);
+  }
+}
+
 @media (min-width: 720px) {
   .bao-shell {
     padding: 24px;
@@ -949,8 +1103,16 @@ h2 {
     min-height: 248px;
   }
 
+  .progress {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
   .time-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .catch-arena {
+    min-height: 430px;
   }
 
   .memory-board {

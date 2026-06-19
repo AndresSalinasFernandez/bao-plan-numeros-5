@@ -1,21 +1,34 @@
 "use client";
 
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-type Stage = "ask" | "time" | "hunt" | "fortune" | "done";
+type Stage = "ask" | "time" | "hunger" | "catch" | "hunt" | "fortune" | "done";
 type MemoryPhase = "preview" | "playing" | "failed" | "won";
 type MemoryCardKind = "bao" | "decoy";
+type CatchPhase = "ready" | "playing" | "won" | "lost";
 type MemoryCard = {
   id: string;
   kind: MemoryCardKind;
   label: string;
   art: string;
 };
+type CatchItem = {
+  id: string;
+  kind: "target" | "trap";
+  label: string;
+  left: number;
+  duration: number;
+  delay: number;
+};
 
 const planDate = "20 de junio de 2026";
 const noButtonMoveIntervalMs = 460;
 const times = ["12:00", "12:30", "13:00", "13:30"];
+const targetCatchCount = 5;
+const catchDurationSeconds = 14;
+const progressLabels = ["Si", "Hora", "Hambre", "5s", "4 baos", "Fortuna"];
 const fortunes = [
   "La salsa picante aprueba esta decisión.",
   "Hoy dos baos saben mejor que uno.",
@@ -41,6 +54,18 @@ const memoryDeck: MemoryCard[] = [
   { id: "edamame", kind: "decoy", label: "Edamame", art: "edamame" },
 ];
 
+function getProgressIndex(stage: Stage) {
+  return {
+    ask: 0,
+    time: 1,
+    hunger: 2,
+    catch: 3,
+    hunt: 4,
+    fortune: 5,
+    done: 5,
+  }[stage];
+}
+
 function shuffleDeck() {
   const shuffled = [...memoryDeck];
 
@@ -63,11 +88,40 @@ function getRandomNoPosition() {
   };
 }
 
+function createCatchItems(): CatchItem[] {
+  const targets = Array.from({ length: targetCatchCount }, (_, index) => ({
+    id: `five-${index + 1}`,
+    kind: "target" as const,
+    label: "5",
+  }));
+  const traps = ["No", "ensalada", "plan B", "solo uno", "hambre falsa"].map((label, index) => ({
+    id: `trap-${index + 1}`,
+    kind: "trap" as const,
+    label,
+  }));
+
+  return [...targets, ...traps].map((item, index) => ({
+    ...item,
+    left: 8 + ((index * 17 + Math.round(Math.random() * 9)) % 82),
+    duration: item.kind === "target" ? 5.8 + Math.random() * 1.6 : 5.6 + Math.random() * 1.8,
+    delay: -Math.random() * 4,
+  }));
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("ask");
   const [noPosition, setNoPosition] = useState({ left: 67, top: 58 });
   const [noAttempts, setNoAttempts] = useState(0);
   const [selectedTime, setSelectedTime] = useState(times[1]);
+  const [hungerLevel, setHungerLevel] = useState(7);
+  const [catchItems, setCatchItems] = useState<CatchItem[]>(() => createCatchItems());
+  const [catchPhase, setCatchPhase] = useState<CatchPhase>("ready");
+  const [catchTimeLeft, setCatchTimeLeft] = useState(catchDurationSeconds);
+  const [caughtFives, setCaughtFives] = useState<string[]>([]);
+  const [trapPenalty, setTrapPenalty] = useState(0);
+  const [catchMessage, setCatchMessage] = useState(
+    "Atrapa los 5 numeros 5 antes de que se enfrien.",
+  );
   const [memoryCards, setMemoryCards] = useState<MemoryCard[]>(memoryDeck);
   const [memoryPhase, setMemoryPhase] = useState<MemoryPhase>("preview");
   const [memoryRound, setMemoryRound] = useState(1);
@@ -81,6 +135,12 @@ export default function Home() {
     memoryCards.some((card) => card.id === id && card.kind === "bao"),
   ).length;
   const currentFortune = fortunes[fortuneIndex];
+  const hungerVerdict =
+    hungerLevel <= 3
+      ? "Diagnóstico: hambre preventiva. Recomendación oficial: pedir más baos igualmente."
+      : hungerLevel <= 7
+        ? "Diagnóstico: hambre seria. Recomendación oficial: pedir más baos sin ponerse solemnes."
+        : "Diagnóstico: hambre legendaria. Recomendación oficial: pedir baos y aceptar refuerzos.";
   const memoryStatus = {
     preview: "Memoriza las tarjetas: en 3 segundos se voltean.",
     playing: "Ahora encuentra los 4 baos. Si fallas, vuelta a empezar.",
@@ -90,8 +150,8 @@ export default function Home() {
 
   const planText = useMemo(
     () =>
-      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
-    [currentFortune, foundBaos, selectedTime],
+      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, hambre ${hungerLevel}/10 con recomendacion de mas baos, ${caughtFives.length}/5 numeros 5 capturados, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
+    [caughtFives.length, currentFortune, foundBaos, hungerLevel, selectedTime],
   );
 
   function triggerNoWarning() {
@@ -112,6 +172,64 @@ export default function Home() {
     setRevealedMemoryIds([]);
     setMemoryPhase("preview");
     setMemoryRound((round) => round + 1);
+  }
+
+  function resetCatchGame() {
+    setCatchItems(createCatchItems());
+    setCatchPhase("ready");
+    setCatchTimeLeft(catchDurationSeconds);
+    setCaughtFives([]);
+    setTrapPenalty(0);
+    setCatchMessage("Atrapa los 5 numeros 5 antes de que se enfrien.");
+  }
+
+  function startCatchGame() {
+    setCatchItems(createCatchItems());
+    setCatchPhase("playing");
+    setCatchTimeLeft(catchDurationSeconds);
+    setCaughtFives([]);
+    setTrapPenalty(0);
+    setCatchMessage("Toca los 5. Evita las trampas con nombre de mala decisión.");
+  }
+
+  function handleCatchItem(item: CatchItem) {
+    if (catchPhase !== "playing" || caughtFives.includes(item.id)) {
+      return;
+    }
+
+    if (item.kind === "trap") {
+      setTrapPenalty((current) => current + 1);
+      setCatchTimeLeft((current) => {
+        const next = Math.max(0, current - 1);
+
+        if (next === 0) {
+          setCatchPhase("lost");
+          setCatchMessage("La trampa ha ganado por ahora. Reintento honorable.");
+        } else {
+          setCatchMessage(`Eso era "${item.label}". Penalizacion culinaria: -1 segundo.`);
+        }
+
+        return next;
+      });
+      return;
+    }
+
+    setCaughtFives((current) => {
+      const next = [...current, item.id];
+
+      if (next.length >= targetCatchCount) {
+        setCatchPhase("won");
+        setCatchMessage("Has demostrado reflejos, hambre y compromiso. Procede la cita.");
+        window.setTimeout(() => {
+          startMemoryRound();
+          setStage("hunt");
+        }, 900);
+      } else {
+        setCatchMessage(`Bien. Quedan ${targetCatchCount - next.length} numeros 5 por capturar.`);
+      }
+
+      return next;
+    });
   }
 
   function handleMemoryCard(card: MemoryCard) {
@@ -193,12 +311,34 @@ export default function Home() {
   }, [memoryPhase, memoryRound, stage]);
 
   useEffect(() => {
+    if (stage !== "catch" || catchPhase !== "playing") {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCatchTimeLeft((current) => {
+        if (current <= 1) {
+          setCatchPhase("lost");
+          setCatchMessage("Tiempo agotado. Los numeros 5 han escapado temporalmente.");
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [catchPhase, stage]);
+
+  useEffect(() => {
     if (stage === "ask") {
       return;
     }
 
     const sectionId = {
       time: "step-time",
+      hunger: "step-hunger",
+      catch: "step-catch",
       hunt: "step-hunt",
       fortune: "step-fortune",
       done: "step-done",
@@ -254,14 +394,9 @@ export default function Home() {
 
           {stage !== "ask" && (
             <div className="progress" aria-label="Progreso del plan">
-              {["Si", "Hora", "4 baos", "Fortuna"].map((item, index) => {
-                const isActive =
-                  (stage === "time" && index <= 1) ||
-                  (stage === "hunt" && index <= 2) ||
-                  ((stage === "fortune" || stage === "done") && index <= 3);
-
+              {progressLabels.map((item, index) => {
                 return (
-                  <span className={isActive ? "is-active" : ""} key={item}>
+                  <span className={index <= getProgressIndex(stage) ? "is-active" : ""} key={item}>
                     {item}
                   </span>
                 );
@@ -303,13 +438,111 @@ export default function Home() {
           <button
             className="primary-action"
             type="button"
+            onClick={() => setStage("hunger")}
+          >
+            Continuar a la calculadora de hambre
+          </button>
+        </section>
+      )}
+
+      {stage === "hunger" && (
+        <section className="step-panel hunger-panel" id="step-hunger">
+          <div className="step-heading">
+            <p className="eyebrow">Mini juego</p>
+            <h2>Calculadora de hambre</h2>
+          </div>
+
+          <label className="hunger-meter">
+            <span>Nivel declarado de hambre</span>
+            <strong>{hungerLevel}/10</strong>
+            <input
+              aria-label="Nivel de hambre"
+              max="10"
+              min="1"
+              type="range"
+              value={hungerLevel}
+              onChange={(event) => setHungerLevel(Number(event.target.value))}
+            />
+          </label>
+
+          <div className="hunger-verdict" aria-live="polite">
+            {hungerVerdict}
+          </div>
+
+          <button
+            className="primary-action"
+            type="button"
             onClick={() => {
-              startMemoryRound();
-              setStage("hunt");
+              resetCatchGame();
+              setStage("catch");
             }}
           >
-            Continuar al entrenamiento bao
+            Aceptar diagnóstico y cazar números 5
           </button>
+        </section>
+      )}
+
+      {stage === "catch" && (
+        <section className="step-panel catch-panel" id="step-catch">
+          <div className="step-heading">
+            <p className="eyebrow">Mini juego</p>
+            <h2>Atrapa los 5 números 5</h2>
+          </div>
+
+          <div className="catch-scoreboard" aria-live="polite">
+            <div>
+              <strong>{caughtFives.length}</strong>
+              <span>/ {targetCatchCount}</span>
+            </div>
+            <div>
+              <strong>{catchTimeLeft}</strong>
+              <span>s</span>
+            </div>
+            <div>
+              <strong>{trapPenalty}</strong>
+              <span>trampas</span>
+            </div>
+          </div>
+
+          <p className="catch-message">{catchMessage}</p>
+
+          <div
+            className={catchPhase === "playing" ? "catch-arena is-live" : "catch-arena"}
+            aria-label="Juego de atrapar numeros 5"
+          >
+            {catchItems.map((item) => {
+              const isCaught = caughtFives.includes(item.id);
+              const itemStyle = {
+                left: `${item.left}%`,
+                animationDuration: `${item.duration}s`,
+                animationDelay: `${item.delay}s`,
+              } as CSSProperties;
+
+              return (
+                <button
+                  aria-label={item.kind === "target" ? "Numero 5" : `Trampa ${item.label}`}
+                  className={[
+                    "falling-item",
+                    item.kind === "target" ? "is-target" : "is-trap",
+                    isCaught ? "is-caught" : "",
+                  ].join(" ")}
+                  disabled={catchPhase !== "playing" || isCaught}
+                  key={item.id}
+                  style={itemStyle}
+                  type="button"
+                  onClick={() => handleCatchItem(item)}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {catchPhase !== "playing" && catchPhase !== "won" && (
+            <button className="primary-action" type="button" onClick={startCatchGame}>
+              {catchPhase === "lost" ? "Reintentar captura" : "Empezar captura"}
+            </button>
+          )}
         </section>
       )}
 
@@ -447,7 +680,11 @@ export default function Home() {
             </div>
             <div>
               <dt>Estado emocional</dt>
-              <dd>Con hambre y buena compañía</dd>
+              <dd>Hambre {hungerLevel}/10, científicamente compatible con pedir más baos</dd>
+            </div>
+            <div>
+              <dt>Reflejos</dt>
+              <dd>{caughtFives.length}/5 números 5 capturados</dd>
             </div>
             <div>
               <dt>Fortuna</dt>

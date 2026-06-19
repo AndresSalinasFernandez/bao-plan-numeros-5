@@ -17,6 +17,9 @@
       const planDate = "20 de junio de 2026";
       const noButtonMoveIntervalMs = 460;
       const times = ["12:00", "12:30", "13:00", "13:30"];
+      const targetCatchCount = 5;
+      const catchDurationSeconds = 14;
+      const progressLabels = ["Si", "Hora", "Hambre", "5s", "4 baos", "Fortuna"];
       const fortunes = [
         "La salsa picante aprueba esta decisión.",
         "Hoy dos baos saben mejor que uno.",
@@ -46,6 +49,13 @@
         noPosition: { left: 67, top: 58 },
         noAttempts: 0,
         selectedTime: "12:30",
+        hungerLevel: 7,
+        catchItems: [],
+        catchPhase: "ready",
+        catchTimeLeft: catchDurationSeconds,
+        caughtFives: [],
+        trapPenalty: 0,
+        catchMessage: "Atrapa los 5 numeros 5 antes de que se enfrien.",
         memoryCards: [...memoryDeck],
         memoryPhase: "preview",
         memoryRound: 1,
@@ -59,6 +69,7 @@
       const app = document.getElementById("app");
       let noTimer = null;
       let memoryTimer = null;
+      let catchTimer = null;
 
       function shuffleDeck() {
         const shuffled = [...memoryDeck];
@@ -82,8 +93,20 @@
         return fortunes[state.fortuneIndex];
       }
 
+      function hungerVerdict() {
+        if (state.hungerLevel <= 3) {
+          return "Diagnóstico: hambre preventiva. Recomendación oficial: pedir más baos igualmente.";
+        }
+
+        if (state.hungerLevel <= 7) {
+          return "Diagnóstico: hambre seria. Recomendación oficial: pedir más baos sin ponerse solemnes.";
+        }
+
+        return "Diagnóstico: hambre legendaria. Recomendación oficial: pedir baos y aceptar refuerzos.";
+      }
+
       function planText() {
-        return `Plan aceptado: numeros 5 contigo el ${planDate} a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
+        return `Plan aceptado: numeros 5 contigo el ${planDate} a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, hambre ${state.hungerLevel}/10 con recomendacion de mas baos, ${state.caughtFives.length}/5 numeros 5 capturados, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
       }
 
       function getRandomNoPosition() {
@@ -97,6 +120,43 @@
         state.noAttempts += 1;
         state.noPosition = getRandomNoPosition();
         render();
+      }
+
+      function progressIndex() {
+        return {
+          ask: 0,
+          time: 1,
+          hunger: 2,
+          catch: 3,
+          hunt: 4,
+          fortune: 5,
+          done: 5,
+        }[state.stage];
+      }
+
+      function createCatchItems() {
+        const targets = Array.from({ length: targetCatchCount }, (_, index) => ({
+          id: `five-${index + 1}`,
+          kind: "target",
+          label: "5",
+        }));
+        const traps = ["No", "ensalada", "plan B", "solo uno", "hambre falsa"].map(
+          (label, index) => ({
+            id: `trap-${index + 1}`,
+            kind: "trap",
+            label,
+          }),
+        );
+
+        return [...targets, ...traps].map((item, index) => ({
+          ...item,
+          left: 8 + ((index * 17 + Math.round(Math.random() * 9)) % 82),
+          duration:
+            item.kind === "target"
+              ? 5.8 + Math.random() * 1.6
+              : 5.6 + Math.random() * 1.8,
+          delay: -Math.random() * 4,
+        }));
       }
 
       function triggerNoWarning() {
@@ -116,6 +176,70 @@
         state.memoryRound += 1;
       }
 
+      function resetCatchGame() {
+        state.catchItems = createCatchItems();
+        state.catchPhase = "ready";
+        state.catchTimeLeft = catchDurationSeconds;
+        state.caughtFives = [];
+        state.trapPenalty = 0;
+        state.catchMessage = "Atrapa los 5 numeros 5 antes de que se enfrien.";
+      }
+
+      function startCatchGame() {
+        state.catchItems = createCatchItems();
+        state.catchPhase = "playing";
+        state.catchTimeLeft = catchDurationSeconds;
+        state.caughtFives = [];
+        state.trapPenalty = 0;
+        state.catchMessage = "Toca los 5. Evita las trampas con nombre de mala decisión.";
+        render(false);
+      }
+
+      function handleCatchItem(itemId) {
+        if (state.catchPhase !== "playing" || state.caughtFives.includes(itemId)) {
+          return;
+        }
+
+        const item = state.catchItems.find((entry) => entry.id === itemId);
+        if (!item) {
+          return;
+        }
+
+        if (item.kind === "trap") {
+          state.trapPenalty += 1;
+          state.catchTimeLeft = Math.max(0, state.catchTimeLeft - 1);
+
+          if (state.catchTimeLeft === 0) {
+            state.catchPhase = "lost";
+            state.catchMessage = "La trampa ha ganado por ahora. Reintento honorable.";
+          } else {
+            state.catchMessage = `Eso era "${item.label}". Penalizacion culinaria: -1 segundo.`;
+          }
+
+          render(false);
+          return;
+        }
+
+        state.caughtFives = [...state.caughtFives, item.id];
+
+        if (state.caughtFives.length >= targetCatchCount) {
+          state.catchPhase = "won";
+          state.catchMessage = "Has demostrado reflejos, hambre y compromiso. Procede la cita.";
+          render(false);
+          window.setTimeout(() => {
+            startMemoryRound();
+            state.stage = "hunt";
+            render();
+          }, 900);
+          return;
+        }
+
+        state.catchMessage = `Bien. Quedan ${
+          targetCatchCount - state.caughtFives.length
+        } numeros 5 por capturar.`;
+        render(false);
+      }
+
       function chooseFortuneCookie(cookieIndex) {
         if (state.openedCookie !== null) {
           return;
@@ -132,6 +256,8 @@
 
         const sectionId = {
           time: "step-time",
+          hunger: "step-hunger",
+          catch: "step-catch",
           hunt: "step-hunt",
           fortune: "step-fortune",
           done: "step-done",
@@ -155,6 +281,11 @@
           window.clearTimeout(memoryTimer);
           memoryTimer = null;
         }
+
+        if (catchTimer) {
+          window.clearInterval(catchTimer);
+          catchTimer = null;
+        }
       }
 
       function scheduleTimers() {
@@ -172,6 +303,20 @@
             state.memoryPhase = "playing";
             render();
           }, 3000);
+        }
+
+        if (state.stage === "catch" && state.catchPhase === "playing") {
+          catchTimer = window.setInterval(() => {
+            if (state.catchTimeLeft <= 1) {
+              state.catchTimeLeft = 0;
+              state.catchPhase = "lost";
+              state.catchMessage = "Tiempo agotado. Los numeros 5 han escapado temporalmente.";
+            } else {
+              state.catchTimeLeft -= 1;
+            }
+
+            render(false);
+          }, 1000);
         }
       }
 
@@ -217,13 +362,9 @@
           state.stage !== "ask"
             ? `
               <div class="progress" aria-label="Progreso del plan">
-                ${["Si", "Hora", "4 baos", "Fortuna"]
+                ${progressLabels
                   .map((item, index) => {
-                    const isActive =
-                      (state.stage === "time" && index <= 1) ||
-                      (state.stage === "hunt" && index <= 2) ||
-                      ((state.stage === "fortune" || state.stage === "done") && index <= 3);
-                    return `<span class="${isActive ? "is-active" : ""}">${item}</span>`;
+                    return `<span class="${index <= progressIndex() ? "is-active" : ""}">${item}</span>`;
                   })
                   .join("")}
               </div>
@@ -283,9 +424,114 @@
               el necesario para tener hambre.
             </div>
 
-            <button class="primary-action" type="button" data-action="start-memory">
-              Continuar al entrenamiento bao
+            <button class="primary-action" type="button" data-action="start-hunger">
+              Continuar a la calculadora de hambre
             </button>
+          </section>
+        `;
+      }
+
+      function hungerHtml() {
+        if (state.stage !== "hunger") {
+          return "";
+        }
+
+        return `
+          <section class="step-panel hunger-panel" id="step-hunger">
+            <div class="step-heading">
+              <p class="eyebrow">Mini juego</p>
+              <h2>Calculadora de hambre</h2>
+            </div>
+
+            <label class="hunger-meter">
+              <span>Nivel declarado de hambre</span>
+              <strong>${state.hungerLevel}/10</strong>
+              <input
+                aria-label="Nivel de hambre"
+                max="10"
+                min="1"
+                type="range"
+                value="${state.hungerLevel}"
+              />
+            </label>
+
+            <div class="hunger-verdict" aria-live="polite">
+              ${hungerVerdict()}
+            </div>
+
+            <button class="primary-action" type="button" data-action="start-catch-stage">
+              Aceptar diagnóstico y cazar números 5
+            </button>
+          </section>
+        `;
+      }
+
+      function catchHtml() {
+        if (state.stage !== "catch") {
+          return "";
+        }
+
+        const itemsHtml = state.catchItems
+          .map((item) => {
+            const isCaught = state.caughtFives.includes(item.id);
+            return `
+              <button
+                aria-label="${item.kind === "target" ? "Numero 5" : `Trampa ${item.label}`}"
+                class="falling-item ${item.kind === "target" ? "is-target" : "is-trap"} ${
+                  isCaught ? "is-caught" : ""
+                }"
+                ${state.catchPhase !== "playing" || isCaught ? "disabled" : ""}
+                style="left: ${item.left}%; animation-duration: ${item.duration}s; animation-delay: ${item.delay}s"
+                type="button"
+                data-action="catch-item"
+                data-catch-id="${item.id}"
+              >
+                ${item.label}
+              </button>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="step-panel catch-panel" id="step-catch">
+            <div class="step-heading">
+              <p class="eyebrow">Mini juego</p>
+              <h2>Atrapa los 5 números 5</h2>
+            </div>
+
+            <div class="catch-scoreboard" aria-live="polite">
+              <div>
+                <strong>${state.caughtFives.length}</strong>
+                <span>/ ${targetCatchCount}</span>
+              </div>
+              <div>
+                <strong>${state.catchTimeLeft}</strong>
+                <span>s</span>
+              </div>
+              <div>
+                <strong>${state.trapPenalty}</strong>
+                <span>trampas</span>
+              </div>
+            </div>
+
+            <p class="catch-message">${state.catchMessage}</p>
+
+            <div
+              class="${state.catchPhase === "playing" ? "catch-arena is-live" : "catch-arena"}"
+              aria-label="Juego de atrapar numeros 5"
+            >
+              ${itemsHtml}
+            </div>
+
+            ${
+              state.catchPhase !== "playing" && state.catchPhase !== "won"
+                ? `
+                  <button class="primary-action" type="button" data-action="start-catch-game">
+                    ${state.catchPhase === "lost" ? "Reintentar captura" : "Empezar captura"}
+                  </button>
+                `
+                : ""
+            }
           </section>
         `;
       }
@@ -447,7 +693,11 @@
               </div>
               <div>
                 <dt>Estado emocional</dt>
-                <dd>Con hambre y buena compañía</dd>
+                <dd>Hambre ${state.hungerLevel}/10, científicamente compatible con pedir más baos</dd>
+              </div>
+              <div>
+                <dt>Reflejos</dt>
+                <dd>${state.caughtFives.length}/5 números 5 capturados</dd>
               </div>
               <div>
                 <dt>Fortuna</dt>
@@ -495,6 +745,8 @@
           <main class="bao-shell">
             ${heroHtml()}
             ${timeHtml()}
+            ${hungerHtml()}
+            ${catchHtml()}
             ${memoryHtml()}
             ${fortuneHtml()}
             ${receiptHtml()}
@@ -520,6 +772,14 @@
           noButton.addEventListener("pointerdown", (event) => {
             event.preventDefault();
             triggerNoWarning();
+          });
+        }
+
+        const hungerInput = document.querySelector(".hunger-meter input");
+        if (hungerInput) {
+          hungerInput.addEventListener("input", (event) => {
+            state.hungerLevel = Number(event.currentTarget.value);
+            render(false);
           });
         }
       }
@@ -604,6 +864,25 @@
 
         if (action === "time") {
           state.selectedTime = event.currentTarget.getAttribute("data-time");
+        }
+
+        if (action === "start-hunger") {
+          state.stage = "hunger";
+        }
+
+        if (action === "start-catch-stage") {
+          resetCatchGame();
+          state.stage = "catch";
+        }
+
+        if (action === "start-catch-game") {
+          startCatchGame();
+          return;
+        }
+
+        if (action === "catch-item") {
+          handleCatchItem(event.currentTarget.getAttribute("data-catch-id"));
+          return;
         }
 
         if (action === "start-memory") {

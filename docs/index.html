@@ -18,8 +18,7 @@
       const noButtonMoveIntervalMs = 460;
       const times = ["12:00", "12:30", "13:00", "13:30"];
       const targetCatchCount = 5;
-      const catchDurationSeconds = 14;
-      const progressLabels = ["Si", "Hora", "Hambre", "5s", "4 baos", "Fortuna"];
+      const progressLabels = ["Si", "Hora", "Hambre", "Arcade", "4 baos", "Fortuna"];
       const fortunes = [
         "La salsa picante aprueba esta decisión.",
         "Hoy dos baos saben mejor que uno.",
@@ -52,7 +51,6 @@
         hungerLevel: 7,
         catchItems: [],
         catchPhase: "ready",
-        catchTimeLeft: catchDurationSeconds,
         caughtFives: [],
         trapPenalty: 0,
         catchMessage: "Atrapa los 5 baos antes de que se enfrien.",
@@ -69,7 +67,6 @@
       const app = document.getElementById("app");
       let noTimer = null;
       let memoryTimer = null;
-      let catchTimer = null;
 
       function shuffleDeck() {
         const shuffled = [...memoryDeck];
@@ -176,18 +173,23 @@
           [mixed[index], mixed[randomIndex]] = [mixed[randomIndex], mixed[index]];
         }
 
-        return mixed.map((item) => ({
-          ...item,
-          startX: randomBetween(10, 38),
-          endX: randomBetween(62, 90),
-          startY: randomBetween(4, 24),
-          endY: randomBetween(68, 84),
-          xDuration: randomBetween(2.8, 5.4),
-          yDuration: randomBetween(3, 5.8),
-          xDelay: -randomBetween(0, 4.8),
-          yDelay: -randomBetween(0, 4.8),
-          zIndex: Math.floor(randomBetween(2, 8)),
-        }));
+        return mixed.map((item) => {
+          const startsLeft = Math.random() < 0.5;
+          const startsTop = Math.random() < 0.5;
+
+          return {
+            ...item,
+            startX: randomBetween(startsLeft ? 8 : 82, startsLeft ? 18 : 92),
+            endX: randomBetween(startsLeft ? 82 : 8, startsLeft ? 92 : 18),
+            startY: randomBetween(startsTop ? 8 : 78, startsTop ? 18 : 88),
+            endY: randomBetween(startsTop ? 78 : 8, startsTop ? 88 : 18),
+            xDuration: randomBetween(3.8, 7.2),
+            yDuration: randomBetween(4.2, 8.2),
+            xDelay: -randomBetween(0, 6),
+            yDelay: -randomBetween(0, 6),
+            zIndex: Math.floor(randomBetween(2, 8)),
+          };
+        });
       }
 
       function triggerNoWarning() {
@@ -210,7 +212,6 @@
       function resetCatchGame() {
         state.catchItems = createCatchItems();
         state.catchPhase = "ready";
-        state.catchTimeLeft = catchDurationSeconds;
         state.caughtFives = [];
         state.trapPenalty = 0;
         state.catchMessage = "Atrapa los 5 baos antes de que se enfrien.";
@@ -219,7 +220,6 @@
       function startCatchGame() {
         state.catchItems = createCatchItems();
         state.catchPhase = "playing";
-        state.catchTimeLeft = catchDurationSeconds;
         state.caughtFives = [];
         state.trapPenalty = 0;
         state.catchMessage = "Toca los baos. Evita los distractores disfrazados de comida.";
@@ -238,14 +238,7 @@
 
         if (item.kind === "trap") {
           state.trapPenalty += 1;
-          state.catchTimeLeft = Math.max(0, state.catchTimeLeft - 1);
-
-          if (state.catchTimeLeft === 0) {
-            state.catchPhase = "lost";
-            state.catchMessage = "La trampa ha ganado por ahora. Reintento honorable.";
-          } else {
-            state.catchMessage = `Eso era "${item.label}". Penalizacion culinaria: -1 segundo.`;
-          }
+          state.catchMessage = `Eso era "${item.label}". No pasa nada: el plan no tiene limite de tiempo.`;
 
           render(false);
           return;
@@ -312,11 +305,6 @@
           window.clearTimeout(memoryTimer);
           memoryTimer = null;
         }
-
-        if (catchTimer) {
-          window.clearInterval(catchTimer);
-          catchTimer = null;
-        }
       }
 
       function scheduleTimers() {
@@ -336,19 +324,6 @@
           }, 2000);
         }
 
-        if (state.stage === "catch" && state.catchPhase === "playing") {
-          catchTimer = window.setInterval(() => {
-            if (state.catchTimeLeft <= 1) {
-              state.catchTimeLeft = 0;
-              state.catchPhase = "lost";
-              state.catchMessage = "Tiempo agotado. Los baos han escapado temporalmente.";
-            } else {
-              state.catchTimeLeft -= 1;
-            }
-
-            render(false);
-          }, 1000);
-        }
       }
 
       function memoryStatus() {
@@ -536,8 +511,8 @@
                 <span>/ ${targetCatchCount}</span>
               </div>
               <div>
-                <strong>${state.catchTimeLeft}</strong>
-                <span>s</span>
+                <strong>∞</strong>
+                <span>sin limite</span>
               </div>
               <div>
                 <strong>${state.trapPenalty}</strong>

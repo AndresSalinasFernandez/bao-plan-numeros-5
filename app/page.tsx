@@ -34,8 +34,7 @@ const planDate = "20 de junio de 2026";
 const noButtonMoveIntervalMs = 460;
 const times = ["12:00", "12:30", "13:00", "13:30"];
 const targetCatchCount = 5;
-const catchDurationSeconds = 14;
-const progressLabels = ["Si", "Hora", "Hambre", "5s", "4 baos", "Fortuna"];
+const progressLabels = ["Si", "Hora", "Hambre", "Arcade", "4 baos", "Fortuna"];
 const fortunes = [
   "La salsa picante aprueba esta decisión.",
   "Hoy dos baos saben mejor que uno.",
@@ -129,18 +128,23 @@ function createCatchItems(): CatchItem[] {
     [mixed[index], mixed[randomIndex]] = [mixed[randomIndex], mixed[index]];
   }
 
-  return mixed.map((item) => ({
-    ...item,
-    startX: randomBetween(10, 38),
-    endX: randomBetween(62, 90),
-    startY: randomBetween(4, 24),
-    endY: randomBetween(68, 84),
-    xDuration: randomBetween(2.8, 5.4),
-    yDuration: randomBetween(3.0, 5.8),
-    xDelay: -randomBetween(0, 4.8),
-    yDelay: -randomBetween(0, 4.8),
-    zIndex: Math.floor(randomBetween(2, 8)),
-  }));
+  return mixed.map((item) => {
+    const startsLeft = Math.random() < 0.5;
+    const startsTop = Math.random() < 0.5;
+
+    return {
+      ...item,
+      startX: randomBetween(startsLeft ? 8 : 82, startsLeft ? 18 : 92),
+      endX: randomBetween(startsLeft ? 82 : 8, startsLeft ? 92 : 18),
+      startY: randomBetween(startsTop ? 8 : 78, startsTop ? 18 : 88),
+      endY: randomBetween(startsTop ? 78 : 8, startsTop ? 88 : 18),
+      xDuration: randomBetween(3.8, 7.2),
+      yDuration: randomBetween(4.2, 8.2),
+      xDelay: -randomBetween(0, 6),
+      yDelay: -randomBetween(0, 6),
+      zIndex: Math.floor(randomBetween(2, 8)),
+    };
+  });
 }
 
 export default function Home() {
@@ -151,7 +155,6 @@ export default function Home() {
   const [hungerLevel, setHungerLevel] = useState(7);
   const [catchItems, setCatchItems] = useState<CatchItem[]>(() => createCatchItems());
   const [catchPhase, setCatchPhase] = useState<CatchPhase>("ready");
-  const [catchTimeLeft, setCatchTimeLeft] = useState(catchDurationSeconds);
   const [caughtFives, setCaughtFives] = useState<string[]>([]);
   const [trapPenalty, setTrapPenalty] = useState(0);
   const [catchMessage, setCatchMessage] = useState("Atrapa los 5 baos antes de que se enfrien.");
@@ -214,7 +217,6 @@ export default function Home() {
   function resetCatchGame() {
     setCatchItems(createCatchItems());
     setCatchPhase("ready");
-    setCatchTimeLeft(catchDurationSeconds);
     setCaughtFives([]);
     setTrapPenalty(0);
     setCatchMessage("Atrapa los 5 baos antes de que se enfrien.");
@@ -223,7 +225,6 @@ export default function Home() {
   function startCatchGame() {
     setCatchItems(createCatchItems());
     setCatchPhase("playing");
-    setCatchTimeLeft(catchDurationSeconds);
     setCaughtFives([]);
     setTrapPenalty(0);
     setCatchMessage("Toca los baos. Evita los distractores disfrazados de comida.");
@@ -236,18 +237,7 @@ export default function Home() {
 
     if (item.kind === "trap") {
       setTrapPenalty((current) => current + 1);
-      setCatchTimeLeft((current) => {
-        const next = Math.max(0, current - 1);
-
-        if (next === 0) {
-          setCatchPhase("lost");
-          setCatchMessage("La trampa ha ganado por ahora. Reintento honorable.");
-        } else {
-          setCatchMessage(`Eso era "${item.label}". Penalizacion culinaria: -1 segundo.`);
-        }
-
-        return next;
-      });
+      setCatchMessage(`Eso era "${item.label}". No pasa nada: el plan no tiene limite de tiempo.`);
       return;
     }
 
@@ -346,26 +336,6 @@ export default function Home() {
 
     return () => window.clearTimeout(timer);
   }, [memoryPhase, memoryRound, stage]);
-
-  useEffect(() => {
-    if (stage !== "catch" || catchPhase !== "playing") {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setCatchTimeLeft((current) => {
-        if (current <= 1) {
-          setCatchPhase("lost");
-          setCatchMessage("Tiempo agotado. Los baos han escapado temporalmente.");
-          return 0;
-        }
-
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [catchPhase, stage]);
 
   useEffect(() => {
     if (stage === "ask") {
@@ -532,8 +502,8 @@ export default function Home() {
               <span>/ {targetCatchCount}</span>
             </div>
             <div>
-              <strong>{catchTimeLeft}</strong>
-              <span>s</span>
+              <strong>∞</strong>
+              <span>sin limite</span>
             </div>
             <div>
               <strong>{trapPenalty}</strong>

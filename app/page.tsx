@@ -14,7 +14,7 @@ type MemoryCard = {
 };
 
 const planDate = "20 de junio de 2026";
-const noButtonMoveIntervalMs = 125;
+const noButtonMoveIntervalMs = 460;
 const times = ["12:00", "12:30", "13:00", "13:30"];
 const fortunes = [
   "La salsa picante aprueba esta decisión.",
@@ -95,6 +95,10 @@ export default function Home() {
   );
 
   function triggerNoWarning() {
+    if (showNoWarning) {
+      return;
+    }
+
     setNoAttempts((attempts) => attempts + 1);
     setShowNoWarning(true);
   }
@@ -232,6 +236,10 @@ export default function Home() {
                 }}
                 type="button"
                 onClick={triggerNoWarning}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  triggerNoWarning();
+                }}
               >
                 No
               </button>

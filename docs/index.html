@@ -15,7 +15,7 @@
 
     <script>
       const planDate = "20 de junio de 2026";
-      const noButtonMoveIntervalMs = 125;
+      const noButtonMoveIntervalMs = 460;
       const times = ["12:00", "12:30", "13:00", "13:30"];
       const fortunes = [
         "La salsa picante aprueba esta decisión.",
@@ -100,6 +100,10 @@
       }
 
       function triggerNoWarning() {
+        if (state.showNoWarning) {
+          return;
+        }
+
         state.noAttempts += 1;
         state.showNoWarning = true;
         render(false);
@@ -511,6 +515,13 @@
           element.addEventListener("click", handleAction);
         });
 
+        const noButton = document.querySelector(".no-button");
+        if (noButton) {
+          noButton.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            triggerNoWarning();
+          });
+        }
       }
 
       async function sharePlan() {

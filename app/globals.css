@@ -169,19 +169,19 @@ h2 {
 .no-button {
   position: absolute;
   z-index: 3;
-  width: 54px;
-  min-height: 34px;
+  width: 76px;
+  min-height: 44px;
   background: #2c211d;
   color: white;
   box-shadow: 0 8px 20px rgba(18, 12, 10, 0.22);
-  font-size: 0.82rem;
+  font-size: 0.98rem;
   font-weight: 900;
   transform: translate(-50%, -50%) rotate(8deg);
 }
 
 .no-button:hover,
 .no-button:focus-visible {
-  transform: translate(-50%, -50%) rotate(-14deg) scale(0.82);
+  transform: translate(-50%, -50%) rotate(-14deg) scale(0.9);
 }
 
 .hint {

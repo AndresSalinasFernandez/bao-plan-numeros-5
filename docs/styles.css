@@ -479,6 +479,7 @@ h2 {
 .memory-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(6, auto);
   column-gap: clamp(3px, 1vw, 6px);
   row-gap: 2px;
   width: min(100%, 218px);

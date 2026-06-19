@@ -41,7 +41,7 @@
         { id: "soy", kind: "decoy", label: "Soja", art: "soy" },
         { id: "rice", kind: "decoy", label: "Arroz", art: "rice" },
         { id: "soup", kind: "decoy", label: "Caldo", art: "soup" },
-        { id: "edamame", kind: "decoy", label: "Edamame", art: "edamame" },
+        { id: "gyoza", kind: "decoy", label: "Gyozas", art: "gyoza" },
       ];
 
       const state = {
@@ -124,6 +124,10 @@
         };
       }
 
+      function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
       function moveNo() {
         state.noAttempts += 1;
         state.noPosition = getRandomNoPosition();
@@ -166,14 +170,23 @@
           kind: "trap",
         }));
 
-        return [...targets, ...traps].map((item, index) => ({
+        const mixed = [...targets, ...traps];
+        for (let index = mixed.length - 1; index > 0; index -= 1) {
+          const randomIndex = Math.floor(Math.random() * (index + 1));
+          [mixed[index], mixed[randomIndex]] = [mixed[randomIndex], mixed[index]];
+        }
+
+        return mixed.map((item) => ({
           ...item,
-          left: 8 + ((index * 17 + Math.round(Math.random() * 9)) % 82),
-          duration:
-            item.kind === "target"
-              ? 5.8 + Math.random() * 1.6
-              : 5.6 + Math.random() * 1.8,
-          delay: -Math.random() * 4,
+          startX: randomBetween(10, 38),
+          endX: randomBetween(62, 90),
+          startY: randomBetween(4, 24),
+          endY: randomBetween(68, 84),
+          xDuration: randomBetween(2.8, 5.4),
+          yDuration: randomBetween(3, 5.8),
+          xDelay: -randomBetween(0, 4.8),
+          yDelay: -randomBetween(0, 4.8),
+          zIndex: Math.floor(randomBetween(2, 8)),
         }));
       }
 
@@ -499,7 +512,7 @@
                   isCaught ? "is-caught" : ""
                 }"
                 ${state.catchPhase !== "playing" || isCaught ? "disabled" : ""}
-                style="left: ${item.left}%; animation-duration: ${item.duration}s; animation-delay: ${item.delay}s"
+                style="--start-x: ${item.startX}%; --end-x: ${item.endX}%; --start-y: ${item.startY}%; --end-y: ${item.endY}%; --x-duration: ${item.xDuration}s; --y-duration: ${item.yDuration}s; --x-delay: ${item.xDelay}s; --y-delay: ${item.yDelay}s; z-index: ${item.zIndex}"
                 type="button"
                 data-action="catch-item"
                 data-catch-id="${item.id}"

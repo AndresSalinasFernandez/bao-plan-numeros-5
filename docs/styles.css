@@ -393,10 +393,10 @@ h2 {
 
 .falling-item {
   position: absolute;
-  top: -118px;
-  z-index: 2;
-  width: 96px;
-  height: 112px;
+  top: var(--start-y, 8%);
+  left: var(--start-x, 12%);
+  width: 58px;
+  height: 68px;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
@@ -404,32 +404,33 @@ h2 {
   background: #fffaf0;
   cursor: pointer;
   font-weight: 950;
-  padding: 12px;
+  padding: 8px;
   touch-action: manipulation;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .catch-arena.is-live .falling-item {
-  animation-name: catch-fall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+  animation-name: catch-bounce-x, catch-bounce-y;
+  animation-duration: var(--x-duration, 4s), var(--y-duration, 4.4s);
+  animation-delay: var(--x-delay, 0s), var(--y-delay, 0s);
+  animation-direction: alternate, alternate;
+  animation-iteration-count: infinite, infinite;
+  animation-timing-function: linear, linear;
 }
 
 .falling-item.is-target {
-  z-index: 4;
   background: #f4fff0;
   border-color: rgba(31, 122, 90, 0.42);
   box-shadow: 0 8px 0 rgba(31, 122, 90, 0.28), 0 18px 26px rgba(31, 122, 90, 0.18);
 }
 
 .falling-item.is-trap {
-  z-index: 3;
   background: #fffaf0;
   box-shadow: 0 8px 18px rgba(18, 12, 10, 0.16);
 }
 
 .falling-item .falling-art {
-  width: min(76%, 72px);
+  width: min(76%, 44px);
 }
 
 .falling-item.is-caught {
@@ -815,25 +816,33 @@ h2 {
   background: rgba(84, 45, 25, 0.15);
 }
 
-.food-art.edamame {
-  border-radius: 999px;
-  background: #dff4df;
-  transform: rotate(-18deg);
-}
-
-.food-art.edamame::before {
-  inset: 22% 10%;
-  border-radius: 999px;
+.food-art.gyoza {
+  border-radius: 44% 56% 44% 56%;
   background:
-    radial-gradient(circle at 22% 50%, #1f7a5a 0 12%, transparent 13%),
-    radial-gradient(circle at 50% 50%, #1f7a5a 0 12%, transparent 13%),
-    radial-gradient(circle at 78% 50%, #1f7a5a 0 12%, transparent 13%);
+    radial-gradient(ellipse at 50% 66%, rgba(84, 45, 25, 0.18) 0 11%, transparent 12%),
+    linear-gradient(135deg, #fffdf7 0 62%, #f2d9a6 63% 100%);
+  box-shadow: inset 0 -12px 0 rgba(238, 203, 151, 0.58);
+  transform: rotate(-8deg);
 }
 
-.food-art.edamame::after {
-  inset: 10%;
-  border: 3px solid rgba(31, 122, 90, 0.18);
-  border-radius: 999px;
+.food-art.gyoza::before {
+  top: 17%;
+  left: 14%;
+  width: 72%;
+  height: 22%;
+  border-radius: 50%;
+  background:
+    repeating-linear-gradient(90deg, rgba(84, 45, 25, 0.18) 0 3px, transparent 4px 10px),
+    rgba(238, 203, 151, 0.62);
+}
+
+.food-art.gyoza::after {
+  right: -5%;
+  bottom: 10%;
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: rgba(217, 52, 43, 0.55);
 }
 
 .memory-reset {
@@ -1055,15 +1064,23 @@ h2 {
   }
 }
 
-@keyframes catch-fall {
+@keyframes catch-bounce-x {
   0% {
-    top: -118px;
-    transform: translateX(-50%) rotate(-9deg);
+    left: var(--start-x, 12%);
   }
 
   100% {
-    top: calc(100% + 118px);
-    transform: translateX(-50%) rotate(15deg);
+    left: var(--end-x, 88%);
+  }
+}
+
+@keyframes catch-bounce-y {
+  0% {
+    top: var(--start-y, 8%);
+  }
+
+  100% {
+    top: var(--end-y, 78%);
   }
 }
 

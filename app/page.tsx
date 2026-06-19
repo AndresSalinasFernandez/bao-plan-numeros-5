@@ -19,9 +19,15 @@ type CatchItem = {
   kind: "target" | "trap";
   label: string;
   art: string;
-  left: number;
-  duration: number;
-  delay: number;
+  startX: number;
+  endX: number;
+  startY: number;
+  endY: number;
+  xDuration: number;
+  yDuration: number;
+  xDelay: number;
+  yDelay: number;
+  zIndex: number;
 };
 
 const planDate = "20 de junio de 2026";
@@ -52,7 +58,7 @@ const memoryDeck: MemoryCard[] = [
   { id: "soy", kind: "decoy", label: "Soja", art: "soy" },
   { id: "rice", kind: "decoy", label: "Arroz", art: "rice" },
   { id: "soup", kind: "decoy", label: "Caldo", art: "soup" },
-  { id: "edamame", kind: "decoy", label: "Edamame", art: "edamame" },
+  { id: "gyoza", kind: "decoy", label: "Gyozas", art: "gyoza" },
 ];
 
 function getProgressIndex(stage: Stage) {
@@ -89,6 +95,10 @@ function getRandomNoPosition() {
   };
 }
 
+function randomBetween(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
 function createCatchItems(): CatchItem[] {
   const targets = [
     { label: "Bao rojo", art: "bao-red" },
@@ -113,11 +123,23 @@ function createCatchItems(): CatchItem[] {
     kind: "trap" as const,
   }));
 
-  return [...targets, ...traps].map((item, index) => ({
+  const mixed = [...targets, ...traps];
+  for (let index = mixed.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [mixed[index], mixed[randomIndex]] = [mixed[randomIndex], mixed[index]];
+  }
+
+  return mixed.map((item) => ({
     ...item,
-    left: 8 + ((index * 17 + Math.round(Math.random() * 9)) % 82),
-    duration: item.kind === "target" ? 5.8 + Math.random() * 1.6 : 5.6 + Math.random() * 1.8,
-    delay: -Math.random() * 4,
+    startX: randomBetween(10, 38),
+    endX: randomBetween(62, 90),
+    startY: randomBetween(4, 24),
+    endY: randomBetween(68, 84),
+    xDuration: randomBetween(2.8, 5.4),
+    yDuration: randomBetween(3.0, 5.8),
+    xDelay: -randomBetween(0, 4.8),
+    yDelay: -randomBetween(0, 4.8),
+    zIndex: Math.floor(randomBetween(2, 8)),
   }));
 }
 
@@ -528,9 +550,15 @@ export default function Home() {
             {catchItems.map((item) => {
               const isCaught = caughtFives.includes(item.id);
               const itemStyle = {
-                left: `${item.left}%`,
-                animationDuration: `${item.duration}s`,
-                animationDelay: `${item.delay}s`,
+                "--start-x": `${item.startX}%`,
+                "--end-x": `${item.endX}%`,
+                "--start-y": `${item.startY}%`,
+                "--end-y": `${item.endY}%`,
+                "--x-duration": `${item.xDuration}s`,
+                "--y-duration": `${item.yDuration}s`,
+                "--x-delay": `${item.xDelay}s`,
+                "--y-delay": `${item.yDelay}s`,
+                zIndex: item.zIndex,
               } as CSSProperties;
 
               return (

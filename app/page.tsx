@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 type Stage = "ask" | "time" | "hunt" | "fortune" | "done";
@@ -12,7 +13,8 @@ type MemoryCard = {
   art: string;
 };
 
-const noButtonMoveIntervalMs = 340;
+const planDate = "20 de junio de 2026";
+const noButtonMoveIntervalMs = 125;
 const times = ["12:00", "12:30", "13:00", "13:30"];
 const fortunes = [
   "La salsa picante aprueba esta decisión.",
@@ -54,6 +56,13 @@ function getRandomFortuneIndex() {
   return Math.floor(Math.random() * fortunes.length);
 }
 
+function getRandomNoPosition() {
+  return {
+    left: 5 + Math.round(Math.random() * 82),
+    top: 42 + Math.round(Math.random() * 42),
+  };
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("ask");
   const [noPosition, setNoPosition] = useState({ left: 67, top: 58 });
@@ -65,6 +74,7 @@ export default function Home() {
   const [revealedMemoryIds, setRevealedMemoryIds] = useState<string[]>([]);
   const [fortuneIndex, setFortuneIndex] = useState(0);
   const [openedCookie, setOpenedCookie] = useState<number | null>(null);
+  const [showNoWarning, setShowNoWarning] = useState(false);
   const [shareLabel, setShareLabel] = useState("Compartir plan");
 
   const foundBaos = revealedMemoryIds.filter((id) =>
@@ -80,16 +90,18 @@ export default function Home() {
 
   const planText = useMemo(
     () =>
-      `Plan aceptado: numeros 5 contigo a las ${selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
+      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
     [currentFortune, foundBaos, selectedTime],
   );
 
   function moveNo() {
     setNoAttempts((attempts) => attempts + 1);
-    setNoPosition({
-      left: 8 + Math.round(Math.random() * 70),
-      top: 48 + Math.round(Math.random() * 34),
-    });
+    setNoPosition(getRandomNoPosition());
+  }
+
+  function triggerNoWarning() {
+    setNoAttempts((attempts) => attempts + 1);
+    setShowNoWarning(true);
   }
 
   function acceptPlan() {
@@ -163,10 +175,7 @@ export default function Home() {
     }
 
     const timer = window.setInterval(() => {
-      setNoPosition({
-        left: 8 + Math.round(Math.random() * 70),
-        top: 48 + Math.round(Math.random() * 34),
-      });
+      setNoPosition(getRandomNoPosition());
     }, noButtonMoveIntervalMs);
 
     return () => window.clearInterval(timer);
@@ -227,7 +236,7 @@ export default function Home() {
                   top: `${noPosition.top}%`,
                 }}
                 type="button"
-                onClick={moveNo}
+                onClick={triggerNoWarning}
                 onMouseEnter={moveNo}
                 onFocus={moveNo}
                 onTouchStart={moveNo}
@@ -267,6 +276,10 @@ export default function Home() {
           <div className="step-heading">
             <p className="eyebrow">Paso 1</p>
             <h2>Elige la hora de encuentro</h2>
+          </div>
+
+          <div className="date-strip">
+            Día del plan: <strong>{planDate}</strong>.
           </div>
 
           <div className="time-grid">
@@ -425,6 +438,10 @@ export default function Home() {
               <dd>Números 5</dd>
             </div>
             <div>
+              <dt>Día</dt>
+              <dd>{planDate}</dd>
+            </div>
+            <div>
               <dt>Hora</dt>
               <dd>{selectedTime}</dd>
             </div>
@@ -452,6 +469,18 @@ export default function Home() {
             </a>
           </div>
         </section>
+      )}
+
+      {showNoWarning && (
+        <div className="no-warning" role="dialog" aria-modal="true" aria-labelledby="no-warning-title">
+        <div className="no-warning__panel">
+            <Image alt="" height={1536} priority src="/devil-warning.png" width={1024} />
+            <h2 id="no-warning-title">¿Estás seguro?</h2>
+            <button className="primary-action" type="button" onClick={() => setShowNoWarning(false)}>
+              Mejor vamos a por baos
+            </button>
+          </div>
+        </div>
       )}
     </main>
   );

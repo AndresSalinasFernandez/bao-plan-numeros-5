@@ -14,7 +14,8 @@
     <div id="app"></div>
 
     <script>
-      const noButtonMoveIntervalMs = 340;
+      const planDate = "20 de junio de 2026";
+      const noButtonMoveIntervalMs = 125;
       const times = ["12:00", "12:30", "13:00", "13:30"];
       const fortunes = [
         "La salsa picante aprueba esta decisión.",
@@ -51,6 +52,7 @@
         revealedMemoryIds: [],
         fortuneIndex: 0,
         openedCookie: null,
+        showNoWarning: false,
         shareLabel: "Compartir plan",
       };
 
@@ -81,16 +83,26 @@
       }
 
       function planText() {
-        return `Plan aceptado: numeros 5 contigo a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
+        return `Plan aceptado: numeros 5 contigo el ${planDate} a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
+      }
+
+      function getRandomNoPosition() {
+        return {
+          left: 5 + Math.round(Math.random() * 82),
+          top: 42 + Math.round(Math.random() * 42),
+        };
       }
 
       function moveNo() {
         state.noAttempts += 1;
-        state.noPosition = {
-          left: 8 + Math.round(Math.random() * 70),
-          top: 48 + Math.round(Math.random() * 34),
-        };
+        state.noPosition = getRandomNoPosition();
         render();
+      }
+
+      function triggerNoWarning() {
+        state.noAttempts += 1;
+        state.showNoWarning = true;
+        render(false);
       }
 
       function startMemoryRound() {
@@ -146,10 +158,7 @@
 
         if (state.stage === "ask") {
           noTimer = window.setInterval(() => {
-            state.noPosition = {
-              left: 8 + Math.round(Math.random() * 70),
-              top: 48 + Math.round(Math.random() * 34),
-            };
+            state.noPosition = getRandomNoPosition();
             render(false);
           }, noButtonMoveIntervalMs);
         }
@@ -184,7 +193,7 @@
                   class="no-button"
                   style="left: ${state.noPosition.left}%; top: ${state.noPosition.top}%"
                   type="button"
-                  data-action="move-no"
+                  data-action="no-warning"
                 >
                   No
                 </button>
@@ -242,6 +251,10 @@
             <div class="step-heading">
               <p class="eyebrow">Paso 1</p>
               <h2>Elige la hora de encuentro</h2>
+            </div>
+
+            <div class="date-strip">
+              Día del plan: <strong>${planDate}</strong>.
             </div>
 
             <div class="time-grid">
@@ -421,6 +434,10 @@
                 <dd>Números 5</dd>
               </div>
               <div>
+                <dt>Día</dt>
+                <dd>${planDate}</dd>
+              </div>
+              <div>
                 <dt>Hora</dt>
                 <dd>${state.selectedTime}</dd>
               </div>
@@ -451,6 +468,24 @@
         `;
       }
 
+      function noWarningHtml() {
+        if (!state.showNoWarning) {
+          return "";
+        }
+
+        return `
+          <div class="no-warning" role="dialog" aria-modal="true" aria-labelledby="no-warning-title">
+            <div class="no-warning__panel">
+              <img alt="" src="./devil-warning.png" />
+              <h2 id="no-warning-title">¿Estás seguro?</h2>
+              <button class="primary-action" type="button" data-action="close-no-warning">
+                Mejor vamos a por baos
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
       function render(shouldScroll = true) {
         app.innerHTML = `
           <main class="bao-shell">
@@ -459,6 +494,7 @@
             ${memoryHtml()}
             ${fortuneHtml()}
             ${receiptHtml()}
+            ${noWarningHtml()}
           </main>
         `;
 
@@ -552,9 +588,13 @@
           state.stage = "time";
         }
 
-        if (action === "move-no") {
-          moveNo();
+        if (action === "no-warning") {
+          triggerNoWarning();
           return;
+        }
+
+        if (action === "close-no-warning") {
+          state.showNoWarning = false;
         }
 
         if (action === "time") {

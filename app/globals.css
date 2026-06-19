@@ -284,6 +284,16 @@ h2 {
   box-shadow: 0 9px 0 #12533d;
 }
 
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  box-shadow: 0 5px 0 #12533d;
+}
+
+.primary-action:disabled:active {
+  transform: none;
+}
+
 .secondary-action {
   border: 1px solid var(--line);
   background: #fffaf0;
@@ -586,6 +596,108 @@ h2 {
   background: rgba(242, 184, 75, 0.82);
 }
 
+.food-art.soy {
+  border-radius: 38% 38% 18% 18%;
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(255, 253, 247, 0.78) 19% 34%, transparent 35%),
+    linear-gradient(#2f2119 0 64%, #d9342b 65%);
+  box-shadow: inset 0 -10px 0 rgba(84, 45, 25, 0.22);
+}
+
+.food-art.soy::before {
+  top: -12%;
+  left: 26%;
+  width: 48%;
+  height: 20%;
+  border-radius: 8px 8px 2px 2px;
+  background: #2f2119;
+}
+
+.food-art.soy::after {
+  bottom: 12%;
+  left: 28%;
+  width: 44%;
+  height: 14%;
+  border-radius: 50%;
+  background: rgba(255, 253, 247, 0.42);
+}
+
+.food-art.rice {
+  border-radius: 50% 50% 38% 38%;
+  background:
+    radial-gradient(circle at 35% 32%, #fff 0 11%, transparent 12%),
+    radial-gradient(circle at 58% 30%, #fff 0 12%, transparent 13%),
+    radial-gradient(circle at 48% 48%, #fff 0 15%, transparent 16%),
+    linear-gradient(180deg, transparent 0 35%, #d9342b 36% 100%);
+  box-shadow: inset 0 -10px 0 rgba(84, 45, 25, 0.16);
+}
+
+.food-art.rice::before {
+  bottom: 8%;
+  left: 16%;
+  width: 68%;
+  height: 24%;
+  border-radius: 0 0 48% 48%;
+  background: #fffdf7;
+}
+
+.food-art.rice::after {
+  bottom: 22%;
+  left: 22%;
+  width: 56%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgba(84, 45, 25, 0.12);
+}
+
+.food-art.soup {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 44%, #f2b84b 0 10%, transparent 11%),
+    radial-gradient(circle at 58% 50%, #1f7a5a 0 8%, transparent 9%),
+    radial-gradient(circle at 50% 54%, #d9342b 0 44%, #fffdf7 45% 62%, transparent 63%);
+  box-shadow: inset 0 -8px 0 rgba(84, 45, 25, 0.12);
+}
+
+.food-art.soup::before {
+  top: 8%;
+  left: 14%;
+  width: 72%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(255, 253, 247, 0.68);
+}
+
+.food-art.soup::after {
+  bottom: 6%;
+  left: 28%;
+  width: 44%;
+  height: 10%;
+  border-radius: 50%;
+  background: rgba(84, 45, 25, 0.15);
+}
+
+.food-art.edamame {
+  border-radius: 999px;
+  background: #dff4df;
+  transform: rotate(-18deg);
+}
+
+.food-art.edamame::before {
+  inset: 22% 10%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 22% 50%, #1f7a5a 0 12%, transparent 13%),
+    radial-gradient(circle at 50% 50%, #1f7a5a 0 12%, transparent 13%),
+    radial-gradient(circle at 78% 50%, #1f7a5a 0 12%, transparent 13%);
+}
+
+.food-art.edamame::after {
+  inset: 10%;
+  border: 3px solid rgba(31, 122, 90, 0.18);
+  border-radius: 999px;
+}
+
 .memory-reset {
   margin-top: 12px;
 }
@@ -593,6 +705,113 @@ h2 {
 .fortune-panel {
   display: grid;
   gap: 20px;
+}
+
+.fortune-cookie-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fortune-cookie-button {
+  min-height: 136px;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #5d3b29;
+  cursor: pointer;
+  font-weight: 950;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.fortune-cookie-button:disabled {
+  cursor: default;
+}
+
+.fortune-cookie-button:not(:disabled):active {
+  transform: translateY(3px);
+}
+
+.fortune-cookie-button.is-open {
+  border-color: rgba(31, 122, 90, 0.48);
+  background: #f4fff0;
+}
+
+.fortune-cookie-shape {
+  position: relative;
+  width: min(76%, 122px);
+  aspect-ratio: 1.35;
+  display: block;
+  border-radius: 52% 52% 44% 44%;
+  background:
+    radial-gradient(ellipse at 50% 68%, rgba(132, 76, 25, 0.34) 0 12%, transparent 13%),
+    linear-gradient(135deg, #f9d98f 0 46%, #d99035 47% 100%);
+  box-shadow: inset 0 -12px 0 rgba(132, 76, 25, 0.18);
+  transform: rotate(-5deg);
+}
+
+.fortune-cookie-shape::before,
+.fortune-cookie-shape::after {
+  content: "";
+  position: absolute;
+}
+
+.fortune-cookie-shape::before {
+  top: 17%;
+  left: 38%;
+  width: 24%;
+  height: 52%;
+  border-radius: 50%;
+  background: rgba(132, 76, 25, 0.22);
+}
+
+.fortune-cookie-shape::after {
+  right: 8%;
+  bottom: 14%;
+  width: 30%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255, 253, 247, 0.24);
+}
+
+.fortune-cookie-button.is-open .fortune-cookie-shape {
+  background:
+    linear-gradient(90deg, transparent 0 34%, #fffdf7 35% 63%, transparent 64%),
+    radial-gradient(ellipse at 32% 56%, #f9d98f 0 32%, transparent 33%),
+    radial-gradient(ellipse at 68% 56%, #d99035 0 32%, transparent 33%);
+  box-shadow: none;
+  transform: rotate(0deg);
+}
+
+.fortune-cookie-button.is-open .fortune-cookie-shape::before {
+  top: -16%;
+  left: 41%;
+  width: 18%;
+  height: 74%;
+  border-radius: 4px;
+  background: #fffdf7;
+  box-shadow: 0 0 0 1px rgba(84, 45, 25, 0.08);
+}
+
+.fortune-cookie-button.is-open .fortune-cookie-shape::after {
+  right: 22%;
+  bottom: 11%;
+  width: 18%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(217, 52, 43, 0.44);
+}
+
+.fortune-hint {
+  margin: 0;
+  color: #6c4a36;
+  line-height: 1.45;
 }
 
 .fortune-cookie {
@@ -687,16 +906,25 @@ h2 {
   }
 
   .time-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .memory-board {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .fortune-actions,
   .receipt-actions {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 380px) and (max-width: 719px) {
+  .memory-board {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .memory-card {
+    min-height: 116px;
   }
 }
 

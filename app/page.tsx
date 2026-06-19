@@ -12,13 +12,17 @@ type MemoryCard = {
   art: string;
 };
 
-const times = ["13:30", "14:00", "14:30", "20:30", "21:00"];
+const noButtonMoveIntervalMs = 340;
+const times = ["12:00", "12:30", "13:00", "13:30"];
 const fortunes = [
-  "La salsa picante aprueba esta decision.",
+  "La salsa picante aprueba esta decisión.",
   "Hoy dos baos saben mejor que uno.",
-  "El numero 5 lleva escrito vuestro destino.",
+  "El número 5 lleva escrito vuestro destino.",
   "Una cita improvisada cuenta doble.",
+  "Si aparece hambre, aparece otro plato.",
+  "El universo recomienda pedir para compartir.",
 ];
+const fortuneCookies = [0, 1, 2, 3];
 
 const memoryDeck: MemoryCard[] = [
   { id: "bao-red", kind: "bao", label: "Bao rojo", art: "bao-red" },
@@ -29,6 +33,10 @@ const memoryDeck: MemoryCard[] = [
   { id: "bao-jade", kind: "bao", label: "Bao jade", art: "bao-jade" },
   { id: "chopsticks", kind: "decoy", label: "Palillos", art: "chopsticks" },
   { id: "bao-classic", kind: "bao", label: "Bao clasico", art: "bao-classic" },
+  { id: "soy", kind: "decoy", label: "Soja", art: "soy" },
+  { id: "rice", kind: "decoy", label: "Arroz", art: "rice" },
+  { id: "soup", kind: "decoy", label: "Caldo", art: "soup" },
+  { id: "edamame", kind: "decoy", label: "Edamame", art: "edamame" },
 ];
 
 function shuffleDeck() {
@@ -42,6 +50,10 @@ function shuffleDeck() {
   return shuffled;
 }
 
+function getRandomFortuneIndex() {
+  return Math.floor(Math.random() * fortunes.length);
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("ask");
   const [noPosition, setNoPosition] = useState({ left: 67, top: 58 });
@@ -52,6 +64,7 @@ export default function Home() {
   const [memoryRound, setMemoryRound] = useState(1);
   const [revealedMemoryIds, setRevealedMemoryIds] = useState<string[]>([]);
   const [fortuneIndex, setFortuneIndex] = useState(0);
+  const [openedCookie, setOpenedCookie] = useState<number | null>(null);
   const [shareLabel, setShareLabel] = useState("Compartir plan");
 
   const foundBaos = revealedMemoryIds.filter((id) =>
@@ -114,6 +127,15 @@ export default function Home() {
     });
   }
 
+  function chooseFortuneCookie(cookieIndex: number) {
+    if (openedCookie !== null) {
+      return;
+    }
+
+    setOpenedCookie(cookieIndex);
+    setFortuneIndex(getRandomFortuneIndex());
+  }
+
   async function sharePlan() {
     const shareData = {
       title: "Plan de numeros 5",
@@ -145,7 +167,7 @@ export default function Home() {
         left: 8 + Math.round(Math.random() * 70),
         top: 48 + Math.round(Math.random() * 34),
       });
-    }, 1100);
+    }, noButtonMoveIntervalMs);
 
     return () => window.clearInterval(timer);
   }, [stage]);
@@ -189,8 +211,7 @@ export default function Home() {
           <p className="eyebrow">Solicitud oficial de plan</p>
           <h1>¿Quieres ir a por unos números 5 conmigo?</h1>
           <p className="hero__copy">
-            Prometo compañía excelente, debate serio sobre salsas y cero juicio
-            si repetimos.
+            Prometo compañía excelente y cero reticencias a pedir más baos.
           </p>
 
           {stage === "ask" && (
@@ -245,7 +266,7 @@ export default function Home() {
         <section className="step-panel" id="step-time">
           <div className="step-heading">
             <p className="eyebrow">Paso 1</p>
-            <h2>Elige la hora del desembarco</h2>
+            <h2>Elige la hora de encuentro</h2>
           </div>
 
           <div className="time-grid">
@@ -344,19 +365,50 @@ export default function Home() {
             <h2>Consulta la galleta de la suerte</h2>
           </div>
 
-          <div className="fortune-cookie" aria-live="polite">
-            <span>“{currentFortune}”</span>
+          <div className="fortune-cookie-grid" aria-label="Galletas de la suerte cerradas">
+            {fortuneCookies.map((cookieIndex) => {
+              const isOpen = openedCookie === cookieIndex;
+
+              return (
+                <button
+                  aria-label={isOpen ? "Galleta abierta" : `Galleta ${cookieIndex + 1} cerrada`}
+                  className={isOpen ? "fortune-cookie-button is-open" : "fortune-cookie-button"}
+                  disabled={openedCookie !== null && !isOpen}
+                  key={cookieIndex}
+                  type="button"
+                  onClick={() => chooseFortuneCookie(cookieIndex)}
+                >
+                  <span className="fortune-cookie-shape" aria-hidden="true" />
+                  <span>{isOpen ? "Abierta" : "Cerrada"}</span>
+                </button>
+              );
+            })}
           </div>
 
+          {openedCookie === null ? (
+            <p className="fortune-hint">Elige una galleta. Solo una trae el mensaje oficial.</p>
+          ) : (
+            <div className="fortune-cookie" aria-live="polite">
+              <span>“{currentFortune}”</span>
+            </div>
+          )}
+
           <div className="fortune-actions">
+            {openedCookie !== null && (
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => setOpenedCookie(null)}
+              >
+                Elegir otra galleta
+              </button>
+            )}
             <button
-              className="secondary-action"
+              className="primary-action"
+              disabled={openedCookie === null}
               type="button"
-              onClick={() => setFortuneIndex((fortuneIndex + 1) % fortunes.length)}
+              onClick={() => setStage("done")}
             >
-              Otra fortuna
-            </button>
-            <button className="primary-action" type="button" onClick={() => setStage("done")}>
               Sellar el plan
             </button>
           </div>

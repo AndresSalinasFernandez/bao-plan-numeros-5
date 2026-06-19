@@ -70,6 +70,12 @@ const memoryDeck: MemoryCard[] = [
   { id: "jazmin", kind: "decoy", label: "Jazmin", art: "tea" },
   { id: "bowl", kind: "decoy", label: "Bowl", art: "rice" },
   { id: "tazon", kind: "decoy", label: "Tazon", art: "rice" },
+  { id: "sopa", kind: "decoy", label: "Sopa", art: "soup" },
+  { id: "wok", kind: "decoy", label: "Wok", art: "noodles" },
+  { id: "aceite", kind: "decoy", label: "Aceite", art: "chili" },
+  { id: "frito", kind: "decoy", label: "Frito", art: "gyoza" },
+  { id: "sesamo", kind: "decoy", label: "Sesamo", art: "rice" },
+  { id: "rollito", kind: "decoy", label: "Rollito", art: "gyoza" },
 ];
 
 function getProgressIndex(stage: Stage) {

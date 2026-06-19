@@ -8,17 +8,17 @@
       content="Una propuesta seria, romantica y con baos de fondo."
     />
     <title>Plan de numeros 5</title>
-    <link rel="stylesheet" href="./styles.css?v=memory-18-cards" />
+    <link rel="stylesheet" href="./styles.css?v=memory-24-cards" />
     <style>
       .memory-board {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         grid-template-rows: repeat(6, auto);
-        width: min(100%, 218px);
+        width: min(100%, 292px);
       }
 
       @media (min-width: 720px) {
         .memory-board {
-          width: min(100%, 452px);
+          width: min(100%, 606px);
         }
       }
     </style>
@@ -60,6 +60,12 @@
         { id: "jazmin", kind: "decoy", label: "Jazmin", art: "tea" },
         { id: "bowl", kind: "decoy", label: "Bowl", art: "rice" },
         { id: "tazon", kind: "decoy", label: "Tazon", art: "rice" },
+        { id: "sopa", kind: "decoy", label: "Sopa", art: "soup" },
+        { id: "wok", kind: "decoy", label: "Wok", art: "noodles" },
+        { id: "aceite", kind: "decoy", label: "Aceite", art: "chili" },
+        { id: "frito", kind: "decoy", label: "Frito", art: "gyoza" },
+        { id: "sesamo", kind: "decoy", label: "Sesamo", art: "rice" },
+        { id: "rollito", kind: "decoy", label: "Rollito", art: "gyoza" },
       ];
 
       const state = {

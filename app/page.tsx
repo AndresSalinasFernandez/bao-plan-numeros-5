@@ -94,11 +94,6 @@ export default function Home() {
     [currentFortune, foundBaos, selectedTime],
   );
 
-  function moveNo() {
-    setNoAttempts((attempts) => attempts + 1);
-    setNoPosition(getRandomNoPosition());
-  }
-
   function triggerNoWarning() {
     setNoAttempts((attempts) => attempts + 1);
     setShowNoWarning(true);
@@ -237,9 +232,6 @@ export default function Home() {
                 }}
                 type="button"
                 onClick={triggerNoWarning}
-                onMouseEnter={moveNo}
-                onFocus={moveNo}
-                onTouchStart={moveNo}
               >
                 No
               </button>

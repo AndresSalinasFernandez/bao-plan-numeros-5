@@ -511,12 +511,6 @@
           element.addEventListener("click", handleAction);
         });
 
-        const noButton = document.querySelector(".no-button");
-        if (noButton) {
-          noButton.addEventListener("mouseenter", moveNo);
-          noButton.addEventListener("focus", moveNo);
-          noButton.addEventListener("touchstart", moveNo, { passive: true });
-        }
       }
 
       async function sharePlan() {

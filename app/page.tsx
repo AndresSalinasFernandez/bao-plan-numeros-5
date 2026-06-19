@@ -64,6 +64,19 @@ const memoryDeck: MemoryCard[] = [
   { id: "rice", kind: "decoy", label: "Arroz", art: "rice" },
   { id: "soup", kind: "decoy", label: "Caldo", art: "soup" },
   { id: "gyoza", kind: "decoy", label: "Gyozas", art: "gyoza" },
+  { id: "ramen", kind: "decoy", label: "Ramen", art: "noodles" },
+  { id: "miso", kind: "decoy", label: "Miso", art: "soup" },
+  { id: "picante", kind: "decoy", label: "Picante", art: "chili" },
+  { id: "jazmin", kind: "decoy", label: "Jazmin", art: "tea" },
+  { id: "bowl", kind: "decoy", label: "Bowl", art: "rice" },
+  { id: "tazon", kind: "decoy", label: "Tazon", art: "rice" },
+  { id: "sopa", kind: "decoy", label: "Sopa", art: "soup" },
+  { id: "wok", kind: "decoy", label: "Wok", art: "noodles" },
+  { id: "aceite", kind: "decoy", label: "Aceite", art: "chili" },
+  { id: "frito", kind: "decoy", label: "Frito", art: "gyoza" },
+  { id: "sesamo", kind: "decoy", label: "Sesamo", art: "rice" },
+  { id: "tofu", kind: "decoy", label: "Tofu", art: "soy" },
+  { id: "rollito", kind: "decoy", label: "Rollito", art: "gyoza" },
 ];
 
 function getProgressIndex(stage: Stage) {
@@ -150,10 +163,10 @@ function createCatchItems(): CatchItem[] {
       endX: randomBetween(startsLeft ? 82 : 8, startsLeft ? 92 : 18),
       startY: randomBetween(startsTop ? 8 : 78, startsTop ? 18 : 88),
       endY: randomBetween(startsTop ? 78 : 8, startsTop ? 88 : 18),
-      xDuration: randomBetween(3.8, 7.2),
-      yDuration: randomBetween(4.2, 8.2),
-      xDelay: -randomBetween(0, 6),
-      yDelay: -randomBetween(0, 6),
+      xDuration: randomBetween(2.2, 4.6),
+      yDuration: randomBetween(2.4, 5.0),
+      xDelay: -randomBetween(0, 4),
+      yDelay: -randomBetween(0, 4),
       zIndex: Math.floor(randomBetween(2, 8)),
     };
   });

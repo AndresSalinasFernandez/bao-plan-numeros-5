@@ -472,13 +472,15 @@ h2 {
 
 .memory-board {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(5px, 1.7vw, 10px);
+  max-width: 620px;
+  margin-inline: auto;
 }
 
 .memory-card {
-  aspect-ratio: 0.9;
-  min-height: 132px;
+  aspect-ratio: 1;
+  min-height: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -515,8 +517,10 @@ h2 {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   place-items: center;
+  gap: 2px;
+  overflow: hidden;
   backface-visibility: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -526,9 +530,10 @@ h2 {
 .memory-card__front {
   background: #fffaf0;
   color: #5d3b29;
-  padding: 14px;
-  font-size: clamp(0.82rem, 3.6vw, 1rem);
+  padding: clamp(4px, 1.6vw, 10px);
+  font-size: clamp(0.52rem, 2.2vw, 0.82rem);
   font-weight: 950;
+  line-height: 1.05;
   text-align: center;
 }
 
@@ -538,7 +543,7 @@ h2 {
     radial-gradient(circle at 28% 25%, rgba(255, 255, 255, 0.45) 0 9%, transparent 10%),
     linear-gradient(135deg, #d9342b, #a91f1b);
   color: #fff5d6;
-  font-size: clamp(2.6rem, 14vw, 4.4rem);
+  font-size: clamp(1.8rem, 8vw, 3.6rem);
   font-weight: 950;
   transform: rotateY(180deg);
 }
@@ -557,7 +562,7 @@ h2 {
 
 .food-art {
   position: relative;
-  width: min(74%, 104px);
+  width: min(70%, 72px);
   aspect-ratio: 1;
   display: block;
 }
@@ -1119,22 +1124,8 @@ h2 {
     min-height: 430px;
   }
 
-  .memory-board {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .receipt-actions {
     grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 380px) and (max-width: 719px) {
-  .memory-board {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .memory-card {
-    min-height: 116px;
   }
 }
 

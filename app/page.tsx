@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Stage = "ask" | "time" | "hunger" | "catch" | "hunt" | "fortune" | "done";
 type MemoryPhase = "preview" | "playing" | "failed" | "won";
@@ -28,6 +28,12 @@ type CatchItem = {
   xDelay: number;
   yDelay: number;
   zIndex: number;
+};
+type CatchFallingItemProps = {
+  canPlay: boolean;
+  isCaught: boolean;
+  item: CatchItem;
+  onCatch: (item: CatchItem) => void;
 };
 
 const planDate = "20 de junio de 2026";
@@ -98,6 +104,12 @@ function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
+function formatElapsedTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
 function createCatchItems(): CatchItem[] {
   const targets = [
     { label: "Bao rojo", art: "bao-red" },
@@ -147,6 +159,42 @@ function createCatchItems(): CatchItem[] {
   });
 }
 
+const CatchFallingItem = memo(function CatchFallingItem({
+  canPlay,
+  isCaught,
+  item,
+  onCatch,
+}: CatchFallingItemProps) {
+  const itemStyle = {
+    "--start-x": `${item.startX}%`,
+    "--end-x": `${item.endX}%`,
+    "--start-y": `${item.startY}%`,
+    "--end-y": `${item.endY}%`,
+    "--x-duration": `${item.xDuration}s`,
+    "--y-duration": `${item.yDuration}s`,
+    "--x-delay": `${item.xDelay}s`,
+    "--y-delay": `${item.yDelay}s`,
+    zIndex: item.zIndex,
+  } as CSSProperties;
+
+  return (
+    <button
+      aria-label={item.kind === "target" ? item.label : `Trampa ${item.label}`}
+      className={[
+        "falling-item",
+        item.kind === "target" ? "is-target" : "is-trap",
+        isCaught ? "is-caught" : "",
+      ].join(" ")}
+      disabled={!canPlay || isCaught}
+      style={itemStyle}
+      type="button"
+      onClick={() => onCatch(item)}
+    >
+      <span className={`falling-art food-art ${item.art}`} aria-hidden="true" />
+    </button>
+  );
+});
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("ask");
   const [noPosition, setNoPosition] = useState({ left: 67, top: 58 });
@@ -156,6 +204,7 @@ export default function Home() {
   const [catchItems, setCatchItems] = useState<CatchItem[]>(() => createCatchItems());
   const [catchPhase, setCatchPhase] = useState<CatchPhase>("ready");
   const [caughtFives, setCaughtFives] = useState<string[]>([]);
+  const [catchElapsedSeconds, setCatchElapsedSeconds] = useState(0);
   const [trapPenalty, setTrapPenalty] = useState(0);
   const [catchMessage, setCatchMessage] = useState("Atrapa los 5 baos antes de que se enfrien.");
   const [memoryCards, setMemoryCards] = useState<MemoryCard[]>(memoryDeck);
@@ -166,6 +215,9 @@ export default function Home() {
   const [openedCookie, setOpenedCookie] = useState<number | null>(null);
   const [showNoWarning, setShowNoWarning] = useState(false);
   const [shareLabel, setShareLabel] = useState("Compartir plan");
+  const catchPhaseRef = useRef(catchPhase);
+  const caughtFivesRef = useRef(caughtFives);
+  const catchStartedAtRef = useRef<number | null>(null);
 
   const foundBaos = revealedMemoryIds.filter((id) =>
     memoryCards.some((card) => card.id === id && card.kind === "bao"),
@@ -190,8 +242,8 @@ export default function Home() {
 
   const planText = useMemo(
     () =>
-      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, hambre ${hungerLevel}/10 con recomendacion de mas baos, ${caughtFives.length}/5 baos capturados, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
-    [caughtFives.length, currentFortune, foundBaos, hungerLevel, selectedTime],
+      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, hambre ${hungerLevel}/10 con recomendacion de mas baos, ${caughtFives.length}/5 baos capturados en ${formatElapsedTime(catchElapsedSeconds)}, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
+    [catchElapsedSeconds, caughtFives.length, currentFortune, foundBaos, hungerLevel, selectedTime],
   );
 
   function triggerNoWarning() {
@@ -207,17 +259,20 @@ export default function Home() {
     setStage("time");
   }
 
-  function startMemoryRound() {
+  const startMemoryRound = useCallback(() => {
     setMemoryCards(shuffleDeck());
     setRevealedMemoryIds([]);
     setMemoryPhase("preview");
     setMemoryRound((round) => round + 1);
-  }
+  }, []);
 
   function resetCatchGame() {
     setCatchItems(createCatchItems());
     setCatchPhase("ready");
+    catchStartedAtRef.current = null;
     setCaughtFives([]);
+    caughtFivesRef.current = [];
+    setCatchElapsedSeconds(0);
     setTrapPenalty(0);
     setCatchMessage("Atrapa los 5 baos antes de que se enfrien.");
   }
@@ -225,13 +280,16 @@ export default function Home() {
   function startCatchGame() {
     setCatchItems(createCatchItems());
     setCatchPhase("playing");
+    catchStartedAtRef.current = Date.now();
     setCaughtFives([]);
+    caughtFivesRef.current = [];
+    setCatchElapsedSeconds(0);
     setTrapPenalty(0);
     setCatchMessage("Toca los baos. Evita los distractores disfrazados de comida.");
   }
 
-  function handleCatchItem(item: CatchItem) {
-    if (catchPhase !== "playing" || caughtFives.includes(item.id)) {
+  const handleCatchItem = useCallback((item: CatchItem) => {
+    if (catchPhaseRef.current !== "playing" || caughtFivesRef.current.includes(item.id)) {
       return;
     }
 
@@ -242,11 +300,25 @@ export default function Home() {
     }
 
     setCaughtFives((current) => {
+      if (current.includes(item.id)) {
+        return current;
+      }
+
       const next = [...current, item.id];
+      caughtFivesRef.current = next;
 
       if (next.length >= targetCatchCount) {
+        const elapsedSeconds = catchStartedAtRef.current
+          ? Math.floor((Date.now() - catchStartedAtRef.current) / 1000)
+          : 0;
+
         setCatchPhase("won");
-        setCatchMessage("Has demostrado reflejos, hambre y compromiso bao. Procede la cita.");
+        setCatchElapsedSeconds(elapsedSeconds);
+        setCatchMessage(
+          `Has demostrado reflejos, hambre y compromiso bao en ${formatElapsedTime(
+            elapsedSeconds,
+          )}. Procede la cita.`,
+        );
         window.setTimeout(() => {
           startMemoryRound();
           setStage("hunt");
@@ -257,7 +329,7 @@ export default function Home() {
 
       return next;
     });
-  }
+  }, [startMemoryRound]);
 
   function handleMemoryCard(card: MemoryCard) {
     if (memoryPhase !== "playing" || revealedMemoryIds.includes(card.id)) {
@@ -336,6 +408,30 @@ export default function Home() {
 
     return () => window.clearTimeout(timer);
   }, [memoryPhase, memoryRound, stage]);
+
+  useEffect(() => {
+    catchPhaseRef.current = catchPhase;
+  }, [catchPhase]);
+
+  useEffect(() => {
+    caughtFivesRef.current = caughtFives;
+  }, [caughtFives]);
+
+  useEffect(() => {
+    if (stage !== "catch" || catchPhase !== "playing" || catchStartedAtRef.current === null) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      if (catchStartedAtRef.current === null) {
+        return;
+      }
+
+      setCatchElapsedSeconds(Math.floor((Date.now() - catchStartedAtRef.current) / 1000));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [catchPhase, stage]);
 
   useEffect(() => {
     if (stage === "ask") {
@@ -502,8 +598,8 @@ export default function Home() {
               <span>/ {targetCatchCount}</span>
             </div>
             <div>
-              <strong>∞</strong>
-              <span>sin limite</span>
+              <strong>{formatElapsedTime(catchElapsedSeconds)}</strong>
+              <span>tiempo</span>
             </div>
             <div>
               <strong>{trapPenalty}</strong>
@@ -517,38 +613,15 @@ export default function Home() {
             className={catchPhase === "playing" ? "catch-arena is-live" : "catch-arena"}
             aria-label="Juego de atrapar baos"
           >
-            {catchItems.map((item) => {
-              const isCaught = caughtFives.includes(item.id);
-              const itemStyle = {
-                "--start-x": `${item.startX}%`,
-                "--end-x": `${item.endX}%`,
-                "--start-y": `${item.startY}%`,
-                "--end-y": `${item.endY}%`,
-                "--x-duration": `${item.xDuration}s`,
-                "--y-duration": `${item.yDuration}s`,
-                "--x-delay": `${item.xDelay}s`,
-                "--y-delay": `${item.yDelay}s`,
-                zIndex: item.zIndex,
-              } as CSSProperties;
-
-              return (
-                <button
-                  aria-label={item.kind === "target" ? item.label : `Trampa ${item.label}`}
-                  className={[
-                    "falling-item",
-                    item.kind === "target" ? "is-target" : "is-trap",
-                    isCaught ? "is-caught" : "",
-                  ].join(" ")}
-                  disabled={catchPhase !== "playing" || isCaught}
-                  key={item.id}
-                  style={itemStyle}
-                  type="button"
-                  onClick={() => handleCatchItem(item)}
-                >
-                  <span className={`falling-art food-art ${item.art}`} aria-hidden="true" />
-                </button>
-              );
-            })}
+            {catchItems.map((item) => (
+              <CatchFallingItem
+                canPlay={catchPhase === "playing"}
+                isCaught={caughtFives.includes(item.id)}
+                item={item}
+                key={item.id}
+                onCatch={handleCatchItem}
+              />
+            ))}
           </div>
 
           {catchPhase !== "playing" && catchPhase !== "won" && (
@@ -697,7 +770,9 @@ export default function Home() {
             </div>
             <div>
               <dt>Reflejos</dt>
-              <dd>{caughtFives.length}/5 baos capturados</dd>
+              <dd>
+                {caughtFives.length}/5 baos capturados en {formatElapsedTime(catchElapsedSeconds)}
+              </dd>
             </div>
             <div>
               <dt>Fortuna</dt>

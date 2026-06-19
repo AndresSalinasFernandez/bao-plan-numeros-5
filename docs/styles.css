@@ -218,6 +218,10 @@ h2 {
   padding: clamp(22px, 6vw, 42px);
 }
 
+.memory-panel {
+  width: min(100%, 980px);
+}
+
 .step-heading {
   display: grid;
   gap: 4px;
@@ -473,8 +477,8 @@ h2 {
 .memory-board {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(5px, 1.7vw, 10px);
-  max-width: 620px;
+  gap: clamp(7px, 1.8vw, 12px);
+  max-width: 900px;
   margin-inline: auto;
 }
 
@@ -530,8 +534,8 @@ h2 {
 .memory-card__front {
   background: #fffaf0;
   color: #5d3b29;
-  padding: clamp(4px, 1.6vw, 10px);
-  font-size: clamp(0.52rem, 2.2vw, 0.82rem);
+  padding: clamp(6px, 1.5vw, 12px);
+  font-size: clamp(0.62rem, 1.7vw, 0.92rem);
   font-weight: 950;
   line-height: 1.05;
   text-align: center;
@@ -562,7 +566,7 @@ h2 {
 
 .food-art {
   position: relative;
-  width: min(70%, 72px);
+  width: min(72%, 96px);
   aspect-ratio: 1;
   display: block;
 }

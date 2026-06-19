@@ -646,7 +646,7 @@ export default function Home() {
       )}
 
       {stage === "hunt" && (
-        <section className="step-panel" id="step-hunt">
+        <section className="step-panel memory-panel" id="step-hunt">
           <div className="step-heading">
             <p className="eyebrow">Mini juego</p>
             <h2>Encuentra los 4 baos sin fallar</h2>

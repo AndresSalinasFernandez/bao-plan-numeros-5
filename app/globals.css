@@ -489,13 +489,14 @@ h2 {
   display: grid;
   grid-template-columns: repeat(5, minmax(96px, 1fr));
   column-gap: clamp(6px, 1.2vw, 10px);
-  row-gap: 4px;
+  row-gap: 2px;
   width: min(1040px, max(520px, 100%));
   margin-inline: auto;
   padding-bottom: 4px;
 }
 
 .memory-card {
+  width: 100%;
   aspect-ratio: 1.42;
   min-height: 0;
   min-width: 0;
@@ -503,6 +504,8 @@ h2 {
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
+  justify-self: stretch;
+  padding: 0;
   perspective: 900px;
   touch-action: manipulation;
 }

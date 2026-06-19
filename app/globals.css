@@ -228,7 +228,9 @@ h2 {
 }
 
 .memory-panel {
-  width: min(100%, 980px);
+  width: min(100%, 1120px);
+  overflow-x: auto;
+  padding-inline: clamp(12px, 3vw, 42px);
 }
 
 .step-heading {
@@ -485,15 +487,18 @@ h2 {
 
 .memory-board {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(7px, 1.8vw, 12px);
-  max-width: 900px;
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
+  column-gap: clamp(6px, 1.2vw, 10px);
+  row-gap: 4px;
+  width: min(1040px, max(520px, 100%));
   margin-inline: auto;
+  padding-bottom: 4px;
 }
 
 .memory-card {
-  aspect-ratio: 1;
+  aspect-ratio: 1.42;
   min-height: 0;
+  min-width: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -543,8 +548,8 @@ h2 {
 .memory-card__front {
   background: #fffaf0;
   color: #5d3b29;
-  padding: clamp(6px, 1.5vw, 12px);
-  font-size: clamp(0.62rem, 1.7vw, 0.92rem);
+  padding: clamp(5px, 1.2vw, 10px);
+  font-size: clamp(0.68rem, 1.35vw, 0.95rem);
   font-weight: 950;
   line-height: 1.05;
   text-align: center;
@@ -575,7 +580,7 @@ h2 {
 
 .food-art {
   position: relative;
-  width: min(72%, 96px);
+  width: min(58%, 94px);
   aspect-ratio: 1;
   display: block;
 }

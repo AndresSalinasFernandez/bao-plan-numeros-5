@@ -38,15 +38,6 @@ button {
   font: inherit;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-}
-
 .bao-shell {
   min-height: 100svh;
   overflow-x: hidden;
@@ -397,31 +388,23 @@ h2 {
 }
 
 .catch-arena::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  width: 118px;
-  height: 54px;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at 50% 38%, rgba(255, 253, 247, 0.62) 0 42%, transparent 43%),
-    rgba(84, 45, 25, 0.1);
-  pointer-events: none;
+  content: none;
 }
 
 .falling-item {
   position: absolute;
-  top: -72px;
+  top: -118px;
   z-index: 2;
-  width: 82px;
-  height: 82px;
+  width: 96px;
+  height: 112px;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  border-radius: 8px;
+  background: #fffaf0;
   cursor: pointer;
   font-weight: 950;
+  padding: 12px;
   touch-action: manipulation;
   transform: translateX(-50%);
 }
@@ -435,6 +418,7 @@ h2 {
 .falling-item.is-target {
   z-index: 4;
   background: #f4fff0;
+  border-color: rgba(31, 122, 90, 0.42);
   box-shadow: 0 8px 0 rgba(31, 122, 90, 0.28), 0 18px 26px rgba(31, 122, 90, 0.18);
 }
 
@@ -444,8 +428,8 @@ h2 {
   box-shadow: 0 8px 18px rgba(18, 12, 10, 0.16);
 }
 
-.falling-art {
-  width: 56px;
+.falling-item .falling-art {
+  width: min(76%, 72px);
 }
 
 .falling-item.is-caught {
@@ -1073,12 +1057,12 @@ h2 {
 
 @keyframes catch-fall {
   0% {
-    top: -72px;
+    top: -118px;
     transform: translateX(-50%) rotate(-9deg);
   }
 
   100% {
-    top: calc(100% + 72px);
+    top: calc(100% + 118px);
     transform: translateX(-50%) rotate(15deg);
   }
 }

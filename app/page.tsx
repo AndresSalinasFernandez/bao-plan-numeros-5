@@ -548,7 +548,6 @@ export default function Home() {
                   onClick={() => handleCatchItem(item)}
                 >
                   <span className={`falling-art food-art ${item.art}`} aria-hidden="true" />
-                  <span className="sr-only">{item.label}</span>
                 </button>
               );
             })}

@@ -55,7 +55,7 @@
         catchTimeLeft: catchDurationSeconds,
         caughtFives: [],
         trapPenalty: 0,
-        catchMessage: "Atrapa los 5 numeros 5 antes de que se enfrien.",
+        catchMessage: "Atrapa los 5 baos antes de que se enfrien.",
         memoryCards: [...memoryDeck],
         memoryPhase: "preview",
         memoryRound: 1,
@@ -94,19 +94,27 @@
       }
 
       function hungerVerdict() {
-        if (state.hungerLevel <= 3) {
-          return "Diagnóstico: hambre preventiva. Recomendación oficial: pedir más baos igualmente.";
+        if (state.hungerLevel <= 2) {
+          return "Diagnóstico: hambre decorativa. Aun así, el protocolo recomienda abrir hueco para baos.";
+        }
+
+        if (state.hungerLevel <= 4) {
+          return "Diagnóstico: hambre discreta. Con un par de baos entra en fase prometedora.";
         }
 
         if (state.hungerLevel <= 7) {
-          return "Diagnóstico: hambre seria. Recomendación oficial: pedir más baos sin ponerse solemnes.";
+          return "Diagnóstico: hambre seria. Recomendación oficial: pedir baos sin ponerse solemnes.";
         }
 
-        return "Diagnóstico: hambre legendaria. Recomendación oficial: pedir baos y aceptar refuerzos.";
+        if (state.hungerLevel <= 9) {
+          return "Diagnóstico: hambre de misión. Conviene pedir baos y no mirar atrás.";
+        }
+
+        return "Diagnóstico: hambre legendaria. Se activa el plan refuerzos: baos, algo más y cero dudas.";
       }
 
       function planText() {
-        return `Plan aceptado: numeros 5 contigo el ${planDate} a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, hambre ${state.hungerLevel}/10 con recomendacion de mas baos, ${state.caughtFives.length}/5 numeros 5 capturados, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
+        return `Plan aceptado: numeros 5 contigo el ${planDate} a las ${state.selectedTime}. Pruebas superadas: boton No esquivado, hambre ${state.hungerLevel}/10 con recomendacion de mas baos, ${state.caughtFives.length}/5 baos capturados, ${foundBaos()}/4 baos encontrados sin fallar y fortuna: "${currentFortune()}"`;
       }
 
       function getRandomNoPosition() {
@@ -135,18 +143,28 @@
       }
 
       function createCatchItems() {
-        const targets = Array.from({ length: targetCatchCount }, (_, index) => ({
-          id: `five-${index + 1}`,
+        const targets = [
+          { label: "Bao rojo", art: "bao-red" },
+          { label: "Bao dorado", art: "bao-gold" },
+          { label: "Bao jade", art: "bao-jade" },
+          { label: "Bao clasico", art: "bao-classic" },
+          { label: "Bao extra", art: "bao-gold" },
+        ].map((item, index) => ({
+          ...item,
+          id: `catch-bao-${index + 1}`,
           kind: "target",
-          label: "5",
         }));
-        const traps = ["No", "ensalada", "plan B", "solo uno", "hambre falsa"].map(
-          (label, index) => ({
-            id: `trap-${index + 1}`,
-            kind: "trap",
-            label,
-          }),
-        );
+        const traps = [
+          { label: "Te verde", art: "tea" },
+          { label: "Fideos", art: "noodles" },
+          { label: "Salsa", art: "chili" },
+          { label: "Palillos", art: "chopsticks" },
+          { label: "Arroz", art: "rice" },
+        ].map((item, index) => ({
+          ...item,
+          id: `trap-${index + 1}`,
+          kind: "trap",
+        }));
 
         return [...targets, ...traps].map((item, index) => ({
           ...item,
@@ -182,7 +200,7 @@
         state.catchTimeLeft = catchDurationSeconds;
         state.caughtFives = [];
         state.trapPenalty = 0;
-        state.catchMessage = "Atrapa los 5 numeros 5 antes de que se enfrien.";
+        state.catchMessage = "Atrapa los 5 baos antes de que se enfrien.";
       }
 
       function startCatchGame() {
@@ -191,7 +209,7 @@
         state.catchTimeLeft = catchDurationSeconds;
         state.caughtFives = [];
         state.trapPenalty = 0;
-        state.catchMessage = "Toca los 5. Evita las trampas con nombre de mala decisión.";
+        state.catchMessage = "Toca los baos. Evita los distractores disfrazados de comida.";
         render(false);
       }
 
@@ -224,7 +242,7 @@
 
         if (state.caughtFives.length >= targetCatchCount) {
           state.catchPhase = "won";
-          state.catchMessage = "Has demostrado reflejos, hambre y compromiso. Procede la cita.";
+          state.catchMessage = "Has demostrado reflejos, hambre y compromiso bao. Procede la cita.";
           render(false);
           window.setTimeout(() => {
             startMemoryRound();
@@ -236,7 +254,7 @@
 
         state.catchMessage = `Bien. Quedan ${
           targetCatchCount - state.caughtFives.length
-        } numeros 5 por capturar.`;
+        } baos por capturar.`;
         render(false);
       }
 
@@ -302,7 +320,7 @@
           memoryTimer = window.setTimeout(() => {
             state.memoryPhase = "playing";
             render();
-          }, 3000);
+          }, 2000);
         }
 
         if (state.stage === "catch" && state.catchPhase === "playing") {
@@ -310,7 +328,7 @@
             if (state.catchTimeLeft <= 1) {
               state.catchTimeLeft = 0;
               state.catchPhase = "lost";
-              state.catchMessage = "Tiempo agotado. Los numeros 5 han escapado temporalmente.";
+              state.catchMessage = "Tiempo agotado. Los baos han escapado temporalmente.";
             } else {
               state.catchTimeLeft -= 1;
             }
@@ -322,7 +340,7 @@
 
       function memoryStatus() {
         return {
-          preview: "Memoriza las tarjetas: en 3 segundos se voltean.",
+          preview: "Memoriza las tarjetas: en 2 segundos se voltean.",
           playing: "Ahora encuentra los 4 baos. Si fallas, vuelta a empezar.",
           failed: "Ups: eso no era un bao. Reiniciando la ronda...",
           won: "Perfecto: 4 baos localizados sin fallar.",
@@ -449,7 +467,7 @@
               <input
                 aria-label="Nivel de hambre"
                 max="10"
-                min="1"
+                min="0"
                 type="range"
                 value="${state.hungerLevel}"
               />
@@ -460,7 +478,7 @@
             </div>
 
             <button class="primary-action" type="button" data-action="start-catch-stage">
-              Aceptar diagnóstico y cazar números 5
+              Aceptar diagnóstico y cazar baos
             </button>
           </section>
         `;
@@ -472,11 +490,11 @@
         }
 
         const itemsHtml = state.catchItems
-          .map((item) => {
+              .map((item) => {
             const isCaught = state.caughtFives.includes(item.id);
             return `
               <button
-                aria-label="${item.kind === "target" ? "Numero 5" : `Trampa ${item.label}`}"
+                aria-label="${item.kind === "target" ? item.label : `Trampa ${item.label}`}"
                 class="falling-item ${item.kind === "target" ? "is-target" : "is-trap"} ${
                   isCaught ? "is-caught" : ""
                 }"
@@ -486,7 +504,8 @@
                 data-action="catch-item"
                 data-catch-id="${item.id}"
               >
-                ${item.label}
+                <span class="falling-art food-art ${item.art}" aria-hidden="true"></span>
+                <span class="sr-only">${item.label}</span>
               </button>
             `;
           })
@@ -496,7 +515,7 @@
           <section class="step-panel catch-panel" id="step-catch">
             <div class="step-heading">
               <p class="eyebrow">Mini juego</p>
-              <h2>Atrapa los 5 números 5</h2>
+              <h2>Atrapa los 5 baos</h2>
             </div>
 
             <div class="catch-scoreboard" aria-live="polite">
@@ -518,7 +537,7 @@
 
             <div
               class="${state.catchPhase === "playing" ? "catch-arena is-live" : "catch-arena"}"
-              aria-label="Juego de atrapar numeros 5"
+              aria-label="Juego de atrapar baos"
             >
               ${itemsHtml}
             </div>
@@ -697,7 +716,7 @@
               </div>
               <div>
                 <dt>Reflejos</dt>
-                <dd>${state.caughtFives.length}/5 números 5 capturados</dd>
+                <dd>${state.caughtFives.length}/5 baos capturados</dd>
               </div>
               <div>
                 <dt>Fortuna</dt>

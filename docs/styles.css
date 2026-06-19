@@ -38,6 +38,15 @@ button {
   font: inherit;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .bao-shell {
   min-height: 100svh;
   overflow-x: hidden;
@@ -388,14 +397,16 @@ h2 {
 }
 
 .catch-arena::after {
-  content: "5";
+  content: "";
   position: absolute;
   right: 14px;
-  bottom: -16px;
-  color: rgba(217, 52, 43, 0.12);
-  font-size: 10rem;
-  font-weight: 950;
-  line-height: 1;
+  bottom: 14px;
+  width: 118px;
+  height: 54px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(255, 253, 247, 0.62) 0 42%, transparent 43%),
+    rgba(84, 45, 25, 0.1);
   pointer-events: none;
 }
 
@@ -403,9 +414,12 @@ h2 {
   position: absolute;
   top: -72px;
   z-index: 2;
-  min-height: 54px;
-  border: 0;
-  border-radius: 999px;
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
   cursor: pointer;
   font-weight: 950;
   touch-action: manipulation;
@@ -420,20 +434,18 @@ h2 {
 
 .falling-item.is-target {
   z-index: 4;
-  width: 62px;
-  background: var(--red);
-  color: white;
-  box-shadow: 0 8px 0 var(--red-dark), 0 18px 26px rgba(130, 29, 20, 0.24);
-  font-size: 2.35rem;
+  background: #f4fff0;
+  box-shadow: 0 8px 0 rgba(31, 122, 90, 0.28), 0 18px 26px rgba(31, 122, 90, 0.18);
 }
 
 .falling-item.is-trap {
   z-index: 3;
-  width: 86px;
-  background: #2c211d;
-  color: white;
-  box-shadow: 0 8px 18px rgba(18, 12, 10, 0.22);
-  font-size: 0.74rem;
+  background: #fffaf0;
+  box-shadow: 0 8px 18px rgba(18, 12, 10, 0.16);
+}
+
+.falling-art {
+  width: 56px;
 }
 
 .falling-item.is-caught {

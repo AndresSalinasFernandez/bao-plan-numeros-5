@@ -18,6 +18,7 @@ type CatchItem = {
   id: string;
   kind: "target" | "trap";
   label: string;
+  art: string;
   left: number;
   duration: number;
   delay: number;
@@ -89,15 +90,27 @@ function getRandomNoPosition() {
 }
 
 function createCatchItems(): CatchItem[] {
-  const targets = Array.from({ length: targetCatchCount }, (_, index) => ({
-    id: `five-${index + 1}`,
+  const targets = [
+    { label: "Bao rojo", art: "bao-red" },
+    { label: "Bao dorado", art: "bao-gold" },
+    { label: "Bao jade", art: "bao-jade" },
+    { label: "Bao clasico", art: "bao-classic" },
+    { label: "Bao extra", art: "bao-gold" },
+  ].map((item, index) => ({
+    ...item,
+    id: `catch-bao-${index + 1}`,
     kind: "target" as const,
-    label: "5",
   }));
-  const traps = ["No", "ensalada", "plan B", "solo uno", "hambre falsa"].map((label, index) => ({
+  const traps = [
+    { label: "Te verde", art: "tea" },
+    { label: "Fideos", art: "noodles" },
+    { label: "Salsa", art: "chili" },
+    { label: "Palillos", art: "chopsticks" },
+    { label: "Arroz", art: "rice" },
+  ].map((item, index) => ({
+    ...item,
     id: `trap-${index + 1}`,
     kind: "trap" as const,
-    label,
   }));
 
   return [...targets, ...traps].map((item, index) => ({
@@ -119,9 +132,7 @@ export default function Home() {
   const [catchTimeLeft, setCatchTimeLeft] = useState(catchDurationSeconds);
   const [caughtFives, setCaughtFives] = useState<string[]>([]);
   const [trapPenalty, setTrapPenalty] = useState(0);
-  const [catchMessage, setCatchMessage] = useState(
-    "Atrapa los 5 numeros 5 antes de que se enfrien.",
-  );
+  const [catchMessage, setCatchMessage] = useState("Atrapa los 5 baos antes de que se enfrien.");
   const [memoryCards, setMemoryCards] = useState<MemoryCard[]>(memoryDeck);
   const [memoryPhase, setMemoryPhase] = useState<MemoryPhase>("preview");
   const [memoryRound, setMemoryRound] = useState(1);
@@ -136,13 +147,17 @@ export default function Home() {
   ).length;
   const currentFortune = fortunes[fortuneIndex];
   const hungerVerdict =
-    hungerLevel <= 3
-      ? "Diagnóstico: hambre preventiva. Recomendación oficial: pedir más baos igualmente."
-      : hungerLevel <= 7
-        ? "Diagnóstico: hambre seria. Recomendación oficial: pedir más baos sin ponerse solemnes."
-        : "Diagnóstico: hambre legendaria. Recomendación oficial: pedir baos y aceptar refuerzos.";
+    hungerLevel <= 2
+      ? "Diagnóstico: hambre decorativa. Aun así, el protocolo recomienda abrir hueco para baos."
+      : hungerLevel <= 4
+        ? "Diagnóstico: hambre discreta. Con un par de baos entra en fase prometedora."
+        : hungerLevel <= 7
+          ? "Diagnóstico: hambre seria. Recomendación oficial: pedir baos sin ponerse solemnes."
+          : hungerLevel <= 9
+            ? "Diagnóstico: hambre de misión. Conviene pedir baos y no mirar atrás."
+            : "Diagnóstico: hambre legendaria. Se activa el plan refuerzos: baos, algo más y cero dudas.";
   const memoryStatus = {
-    preview: "Memoriza las tarjetas: en 3 segundos se voltean.",
+    preview: "Memoriza las tarjetas: en 2 segundos se voltean.",
     playing: "Ahora encuentra los 4 baos. Si fallas, vuelta a empezar.",
     failed: "Ups: eso no era un bao. Reiniciando la ronda...",
     won: "Perfecto: 4 baos localizados sin fallar.",
@@ -150,7 +165,7 @@ export default function Home() {
 
   const planText = useMemo(
     () =>
-      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, hambre ${hungerLevel}/10 con recomendacion de mas baos, ${caughtFives.length}/5 numeros 5 capturados, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
+      `Plan aceptado: numeros 5 contigo el ${planDate} a las ${selectedTime}. Pruebas superadas: boton No esquivado, hambre ${hungerLevel}/10 con recomendacion de mas baos, ${caughtFives.length}/5 baos capturados, ${foundBaos}/4 baos encontrados sin fallar y fortuna: "${currentFortune}"`,
     [caughtFives.length, currentFortune, foundBaos, hungerLevel, selectedTime],
   );
 
@@ -180,7 +195,7 @@ export default function Home() {
     setCatchTimeLeft(catchDurationSeconds);
     setCaughtFives([]);
     setTrapPenalty(0);
-    setCatchMessage("Atrapa los 5 numeros 5 antes de que se enfrien.");
+    setCatchMessage("Atrapa los 5 baos antes de que se enfrien.");
   }
 
   function startCatchGame() {
@@ -189,7 +204,7 @@ export default function Home() {
     setCatchTimeLeft(catchDurationSeconds);
     setCaughtFives([]);
     setTrapPenalty(0);
-    setCatchMessage("Toca los 5. Evita las trampas con nombre de mala decisión.");
+    setCatchMessage("Toca los baos. Evita los distractores disfrazados de comida.");
   }
 
   function handleCatchItem(item: CatchItem) {
@@ -219,13 +234,13 @@ export default function Home() {
 
       if (next.length >= targetCatchCount) {
         setCatchPhase("won");
-        setCatchMessage("Has demostrado reflejos, hambre y compromiso. Procede la cita.");
+        setCatchMessage("Has demostrado reflejos, hambre y compromiso bao. Procede la cita.");
         window.setTimeout(() => {
           startMemoryRound();
           setStage("hunt");
         }, 900);
       } else {
-        setCatchMessage(`Bien. Quedan ${targetCatchCount - next.length} numeros 5 por capturar.`);
+        setCatchMessage(`Bien. Quedan ${targetCatchCount - next.length} baos por capturar.`);
       }
 
       return next;
@@ -305,7 +320,7 @@ export default function Home() {
 
     const timer = window.setTimeout(() => {
       setMemoryPhase("playing");
-    }, 3000);
+    }, 2000);
 
     return () => window.clearTimeout(timer);
   }, [memoryPhase, memoryRound, stage]);
@@ -319,7 +334,7 @@ export default function Home() {
       setCatchTimeLeft((current) => {
         if (current <= 1) {
           setCatchPhase("lost");
-          setCatchMessage("Tiempo agotado. Los numeros 5 han escapado temporalmente.");
+          setCatchMessage("Tiempo agotado. Los baos han escapado temporalmente.");
           return 0;
         }
 
@@ -458,7 +473,7 @@ export default function Home() {
             <input
               aria-label="Nivel de hambre"
               max="10"
-              min="1"
+              min="0"
               type="range"
               value={hungerLevel}
               onChange={(event) => setHungerLevel(Number(event.target.value))}
@@ -477,7 +492,7 @@ export default function Home() {
               setStage("catch");
             }}
           >
-            Aceptar diagnóstico y cazar números 5
+            Aceptar diagnóstico y cazar baos
           </button>
         </section>
       )}
@@ -486,7 +501,7 @@ export default function Home() {
         <section className="step-panel catch-panel" id="step-catch">
           <div className="step-heading">
             <p className="eyebrow">Mini juego</p>
-            <h2>Atrapa los 5 números 5</h2>
+            <h2>Atrapa los 5 baos</h2>
           </div>
 
           <div className="catch-scoreboard" aria-live="polite">
@@ -508,7 +523,7 @@ export default function Home() {
 
           <div
             className={catchPhase === "playing" ? "catch-arena is-live" : "catch-arena"}
-            aria-label="Juego de atrapar numeros 5"
+            aria-label="Juego de atrapar baos"
           >
             {catchItems.map((item) => {
               const isCaught = caughtFives.includes(item.id);
@@ -520,7 +535,7 @@ export default function Home() {
 
               return (
                 <button
-                  aria-label={item.kind === "target" ? "Numero 5" : `Trampa ${item.label}`}
+                  aria-label={item.kind === "target" ? item.label : `Trampa ${item.label}`}
                   className={[
                     "falling-item",
                     item.kind === "target" ? "is-target" : "is-trap",
@@ -532,7 +547,8 @@ export default function Home() {
                   type="button"
                   onClick={() => handleCatchItem(item)}
                 >
-                  {item.label}
+                  <span className={`falling-art food-art ${item.art}`} aria-hidden="true" />
+                  <span className="sr-only">{item.label}</span>
                 </button>
               );
             })}
@@ -684,7 +700,7 @@ export default function Home() {
             </div>
             <div>
               <dt>Reflejos</dt>
-              <dd>{caughtFives.length}/5 números 5 capturados</dd>
+              <dd>{caughtFives.length}/5 baos capturados</dd>
             </div>
             <div>
               <dt>Fortuna</dt>

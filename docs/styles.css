@@ -478,10 +478,10 @@ h2 {
 
 .memory-board {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: clamp(3px, 1vw, 6px);
   row-gap: 2px;
-  width: min(100%, 372px);
+  width: min(100%, 218px);
   margin-inline: auto;
   padding-bottom: 4px;
 }
@@ -1135,7 +1135,7 @@ h2 {
   .memory-board {
     column-gap: 8px;
     row-gap: 6px;
-    width: min(100%, 760px);
+    width: min(100%, 452px);
   }
 
   .memory-card {
